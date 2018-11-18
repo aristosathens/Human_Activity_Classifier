@@ -4,7 +4,7 @@
     Main file for running project.
 '''
 
-import classes
+import logistic_regression
 import util
 
 # ------------------------------------- Main ------------------------------------- #
@@ -19,7 +19,7 @@ def main():
     # file_name = './PAMAP2_Dataset/Protocol/subject101.dat'
 
     # Create object, train it
-    learner = classes.RegressionLearner(file_name, learning_rate=1e-2)
+    learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, learning_rate=1e-2)
     learner.train(batch_size=500)
 
     # Use plot() from our util.py package
