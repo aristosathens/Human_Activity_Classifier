@@ -20,3 +20,4 @@ class BodyPart(enum.Enum):
     hand = 0
     chest = 1
     ankle = 2
+    heart_rate = 3

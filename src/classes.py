@@ -9,21 +9,25 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 import util
-from types import *
+from enum_types import *
 
 
 # ------------------------------------- Class ------------------------------------- #
 
 class DataLoader():
     '''
-        Use to load data and store it as an object
+        Use to load data and store it as an object.
+        m - number of data points
+        n - number of input features
+        k - number of classes
     '''
 
     def __init__(self,
                 file_name,
                 percent_validation=0.15,
                 learning_rate = 0.1,
-                epsilon = 1e-2):
+                epsilon = 1e-2
+                ):
         '''
             Initialize DataLoader
         '''
@@ -81,6 +85,8 @@ class DataLoader():
         #extract data
         self.timestamp = person1_data_matrix_fixed[:,0]
         self.activity_ID = person1_data_matrix_fixed[:,1]
+
+        '''
         self.heart_rate = person1_data_matrix_fixed[:,2]
 
         IMU_hand = person1_data_matrix_fixed[:,3:19]
@@ -100,16 +106,18 @@ class DataLoader():
         self.ankle_accel = IMU_ankle[:, 1:3]  # only use the +-16g sensor, as noted in the readme
         self.ankle_gyro = IMU_ankle[:, 7:9]
         self.ankle_magnet = IMU_ankle[:, 10:12]
+        '''
 
         # TODO: Split data into train/validation set
-        self.raw_data = person1_data_matrix_fixed[2:, :]
+        a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
+        self.raw_data = person1_data_matrix_fixed[a:, :]
+        self.assign_data_indices(a)
         self.m, self.n = self.raw_data.shape
 
         self.labels = np.unique(activity_ID)
         self.k = int(np.max(self.labels))
 
         self.split_data(person1_data_matrix_fixed, percent_validation)
-        self.assign_data_indices()
 
     def split_data(self, data, percent_validation):
         '''
@@ -121,27 +129,40 @@ class DataLoader():
         self.validation_data = self.raw_data[:num_validation, :]
         self.training_data = self.raw_data[num_validation:, :]
 
-    def assign_data_indices(self):
-        pass
+    def assign_data_indices(self, a):
         '''
-            Requires self.raw_data
+            Requires self.raw_data.
+            a is the offset of the indices. If using the complete dataset (i.e. includes timestamp and
+            activity_ID) then a = 0. If excluding timestamp and activity ID, a = 2. If excluding timestamp,
+            activity_ID, and heart_rate, a = 3
 
-            # -- > Doesn't work as is. Indices all off by 2
+            Example usage:
+                hand_data = train_data[:, self.index[self.BodyPart.hand]]
+                hand_accel_data = hand_data[self.index[SensorType.accel]]
+                plot(hand_accel_data)
 
         '''
         self.index = {}
 
-        self.index["timestamp"] = slice(0)
-        self.index["activity_ID"] = slice(1)
-        self.index["heart_rate"] = slice(2)
+        # These indices are relative to the raw_data matrix
 
-        self.index["hand"] = slice(3, 19, 1)
-        self.index["chest"] = slice(20, 36, 1)
-        self.index["ankle"] = slice(37, 53, 1)
+        self.index["heart_rate"] = slice(2 - a)
+        self.index[BodyPart.heart_rate] = slice(2 - a)
 
-        self.index[BodyPart.hand] = slice(3, 19, 1)
-        self.index[BodyPart.chest] = slice(20, 36, 1)
-        self.index[BodyPart.ankle] = slice(37, 53, 1)
+        self.index["hand"] = slice(3 - a, 19 - a, 1)
+        self.index["chest"] = slice(20 - a, 36 - a, 1)
+        self.index["ankle"] = slice(37 - a, 53 - a, 1)
+
+        self.index[BodyPart.hand] = slice(3 - a, 19 - a, 1)
+        self.index[BodyPart.chest] = slice(20 - a, 36 - a, 1)
+        self.index[BodyPart.ankle] = slice(37 - a, 53 - a, 1)
+
+        # These indices are offset relative to the BodyPart indices
+
+        self.index["temp"] = slice(0)
+        self.index["accel"] = slice(1, 3, 1)
+        self.index["gyro"] = slice(7, 9, 1)
+        self.index["magnet"] = slice(10, 12, 1)
 
         self.index[SensorType.temp] = slice(0)
         self.index[SensorType.accel] = slice(1, 3, 1)
@@ -164,9 +185,6 @@ class DataLoader():
 class RegressionLearner(DataLoader):
     '''
         Inherits __init__() from DataLoader.
-        m - number of data points
-        n - number of input features
-        k - number of classes
     '''
 
     def child_init(self):
@@ -175,10 +193,22 @@ class RegressionLearner(DataLoader):
         '''
         self.theta = np.random.rand(self.n, self.k)
 
+    def predict(self, input_data):
+        '''
+            Return predicted class for input_data
+        '''
+        return self.h(input_data)
+
     def train(self, batch_size=50):
+        '''
+            Train RegressionLearner 
+        '''
         self.stochastic_train(batch_size)
 
     def h(self, x):
+        '''
+            The hypothesis function. Sigmoid in this case
+        '''
         return util.sigmoid(self.theta.T.dot(x))
 
     def stochastic_train(self, batch_size=50):
@@ -203,11 +233,4 @@ class RegressionLearner(DataLoader):
 
             delta = np.abs(np.linalg.norm(self.theta - theta_previous))
             print(delta)
-            # print(self.theta)
 
-        # hand_data = train_data[:, self.index[self.BodyPart.hand]]
-        # hand_accel_data = hand_data[self.index[SensorType.accel]]
-        # plot(hand_accel_data)
-
-    def predict(self, input_data):
-        return self.h(input_data)
