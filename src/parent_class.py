@@ -25,22 +25,58 @@ class DataLoader():
     def __init__(self,
                 file_name,
                 output_folder,
+                model_folder,
                 percent_validation = 0.15,
+                batch_size = None,
                 learning_rate = 0.1,
-                epsilon = 1e-2
+                epsilon = 1e-2,
+                epochs = None,
+
+                architecture = None,
+                activation = None,
+                optimizer = None,
+                metric = None,
+                loss = None,
                 ):
         '''
             Initialize DataLoader
+
+            file_name - path to data file
+            output_folder - path to output directory
+            percent_validation - fraction of data to use for validation
+            batch_size - size of each batch for training. If None, don't use batches. Can be overwritten in self.train()
+            learning_rate - learning rate for update rule
+            epsilon - criterion for convergence
+            epochs - number of rounds of training
+
+            architecture - This will set up a keras neural net with a predefined architecure. Use this OR the following
+                            paramgs. Don't need to use both.
+            activation - activate type. Should be of type ActivationType. Currently only used for DeepLearner
+            optimizer - Which Keras optimizer to use. Should be of type OptimizerType. Currently only used for DeepLearner
+            metric - Which keras metric to use. Should be of type AccuracyType. Currently only used for DeepLearner
+            loss - Which keras loss to use. Should be of type LossType. Currently only used for DeepLearner
         '''
         print("Initializing DataLoader object with file: {}".format(file_name))
 
         self.output_folder = output_folder
+        self.model_folder = model_folder
+
+        self.batch_size = batch_size
+        self.epochs = epochs
         self.alpha = learning_rate
         self.eps = epsilon
+
+        self.architecture = architecture
+        self.activation = activation
+        self.optimizer = optimizer
+        self.accuracy = metric
+        self.loss = loss
 
         self.read_data(file_name, percent_validation)
 
         self.child_init()
+
+        print("Finish Initializing DataLoader object.")
 
 
     def read_data(self, file_name, percent_validation=0.15):
@@ -52,8 +88,6 @@ class DataLoader():
         person1_data_numpy = person1_data.values
         nrows,_ = person1_data_numpy.shape
         ncols = 54
-
-        print(person1_data_numpy.shape)
 
         #convert the string of data for each row into array
         person1_data_matrix = np.zeros((nrows, ncols))
@@ -112,14 +146,15 @@ class DataLoader():
 
         # TODO: Split data into train/validation set
         a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
-        self.raw_data = person1_data_matrix_fixed[a:, :]
+        self.raw_data = person1_data_matrix_fixed[:, a:]
         self.assign_data_indices(a)
         self.m, self.n = self.raw_data.shape
 
-        self.labels = np.unique(activity_ID)
-        self.k = int(np.max(self.labels))
+        self.labels = self.activity_ID
+        self.k = int(np.max(np.unique(activity_ID))) + 1
 
         self.split_data(person1_data_matrix_fixed, percent_validation)
+
 
     def split_data(self, data, percent_validation):
         '''
@@ -128,8 +163,12 @@ class DataLoader():
         '''
         n = data.shape[0]
         num_validation = int(percent_validation * n)
-        self.validation_data = self.raw_data[:num_validation, :]
-        self.training_data = self.raw_data[num_validation:, :]
+
+        self.test_data = self.raw_data[:num_validation, :]
+        self.test_labels = self.labels[:num_validation]
+
+        self.train_data = self.raw_data[num_validation:, :]
+        self.train_labels = self.labels[num_validation:]
 
     def assign_data_indices(self, a):
         '''
@@ -140,7 +179,7 @@ class DataLoader():
 
             Example usage:
                 hand_data = train_data[:, self.index[self.BodyPart.hand]]
-                hand_accel_data = hand_data[self.index[SensorType.accel]]
+                hand_accel_data = hand_data[:, self.index[SensorType.accel]]
                 plot(hand_accel_data)
 
         '''
@@ -171,11 +210,33 @@ class DataLoader():
         self.index[SensorType.gyro] = slice(7, 9, 1)
         self.index[SensorType.magnet] = slice(10, 12, 1)
 
-    def train(self, batch_size):
-        raise Exception("DataLoader does not implement self.train(). Child class must implement it.")
 
-    def predict(self):
-        raise Exception("DataLoader does not implement self.predict(). Child class must implement it.")
+    # ------------------------------------- SubClass Methods ------------------------------------- #
+
+    '''
+        Subclasses that inherit from DataLoader should overwrite these methods.
+    '''
 
     def child_init(self):
         pass
+
+    def train(self, batch_size):
+        raise Exception("DataLoader does not implement self.train(). Child class must implement it.")
+
+    def loss(self):
+        raise Exception("DataLoader does not implement self.loss(). Child class must implement it.")
+
+    def predict(self, input_data):
+        raise Exception("DataLoader does not implement self.predict(). Child class must implement it.")
+
+    def accuracy(self):
+        raise Exception("DataLoader does not implement self.accuracy(). Child class must implement it.")
+
+    def save(self):
+        raise Exception("DataLoader does not implement self.save(). Child class must implement it.")
+
+    def load(self):
+        raise Exception("DataLoader does not implement self.load(). Child class must implement it.")
+
+
+

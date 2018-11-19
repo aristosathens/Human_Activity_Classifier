@@ -43,7 +43,7 @@ class RegressionLearner(DataLoader):
             Trains RegressionLearner on self.train_data
         '''
         print("Beginning training...")
-        train_data = self.training_data
+        train_data = self.train_data
 
         delta = 1e25
 
