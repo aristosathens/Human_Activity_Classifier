@@ -1,12 +1,11 @@
 # Zach Blum, Navjot Singh, Aristos Athens
 
-'''
+"""
     Defines enumerated types, DataLoader parent class and various subclasses like RegressionLearner, etc.
-'''
+"""
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 import util
 from enum_types import *
@@ -14,30 +13,30 @@ from enum_types import *
 
 # ------------------------------------- Class ------------------------------------- #
 
-class DataLoader():
-    '''
+class DataLoader:
+    """
         Use to load data and store it as an object.
         m - number of data points
         n - number of input features
         k - number of classes
-    '''
+    """
 
     def __init__(self,
-                file_name,
-                output_folder,
-                model_folder,
-                percent_validation = 0.15,
-                batch_size = None,
-                learning_rate = 0.1,
-                epsilon = 1e-2,
-                epochs = None,
+                 file_name,
+                 output_folder,
+                 model_folder,
+                 percent_validation=0.15,
+                 batch_size=None,
+                 learning_rate=0.1,
+                 epsilon=1e-2,
+                 epochs=None,
 
-                architecture = None,
-                activation = None,
-                optimizer = None,
-                metric = None,
-                loss = None,
-                ):
+                 architecture=None,
+                 activation=None,
+                 optimizer=None,
+                 metric=None,
+                 loss=None,
+                 ):
         '''
             Initialize DataLoader
 
@@ -118,10 +117,6 @@ class DataLoader():
         # Remove all rows with Nan
         person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
 
-        #extract data
-        self.timestamp = person1_data_matrix_fixed[:,0]
-        self.activity_ID = person1_data_matrix_fixed[:,1]
-
         '''
         self.heart_rate = person1_data_matrix_fixed[:,2]
 
@@ -144,7 +139,6 @@ class DataLoader():
         self.ankle_magnet = IMU_ankle[:, 10:12]
         '''
 
-        # TODO: Split data into train/validation set
         a = 1  # a == 1 excludes the first column from the raw_data matrix (time stamp column)
         self.raw_data = person1_data_matrix_fixed[:, a:]
         self.assign_data_indices(a + 1)  # will be using data from training/test sets, which won't have label column
@@ -152,6 +146,7 @@ class DataLoader():
         self.k = int(np.max(np.unique(activity_ID))) + 1
 
         self.split_data(percent_validation)
+        self.m, self.n = self.train_data.shape
 
     def split_data(self, percent_validation):
         '''

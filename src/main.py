@@ -39,12 +39,14 @@ def main():
     # print(accuracy)
 
     # ----------------------- Logistic Regression model ---------------------------------
-    learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, models_folder_name, learning_rate=1e-2)
+    learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, models_folder_name,
+                                                    epsilon=0.5, learning_rate=1e-2)
     learner.train(batch_size=500)
+    learner.predict()
     # Use plot() from our util.py package
-    util.plot([learner.hand_accel], show=True, title="Hand Accel vs Time")
-    util.plot([learner.chest_accel, learner.chest_gyro], show=True, title="Chest Accel & Chest Gyro vs Time")
-    util.plot([learner.activity_ID], show=True, title="Activity ID v Time")
+    # util.plot([learner.hand_accel], show=True, title="Hand Accel vs Time")
+    # util.plot([learner.chest_accel, learner.chest_gyro], show=True, title="Chest Accel & Chest Gyro vs Time")
+    # util.plot([learner.activity_ID], show=True, title="Activity ID v Time")
 
 
 if __name__ == "__main__":

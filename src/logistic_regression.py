@@ -18,13 +18,57 @@ class RegressionLearner(DataLoader):
         '''
             Init data specific to RegressionLearner
         '''
-        self.theta = np.random.rand(self.n, self.k)
 
-    def predict(self, input_data):
+        bool_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3) | \
+                    (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
+                    (self.train_labels == 7) | (self.train_labels == 24)
+        bool_idxs_test = (self.test_labels == 1) | (self.test_labels == 2) | (self.test_labels == 3) | \
+                         (self.test_labels == 4) | (self.test_labels == 5) | (self.test_labels == 6) | \
+                         (self.test_labels == 7) | (self.test_labels == 24)
+
+        self.log_train_data = self.train_data[bool_idxs]
+        self.log_train_labels = self.train_labels[bool_idxs]
+        self.log_test_data = self.test_data[bool_idxs_test]
+        self.log_test_labels = self.test_labels[bool_idxs_test]
+
+        # replace 1, 2, 3 with 0 and 4, 5, 6, 7, 24 with 1
+        nonactive_idxs = (self.log_train_labels == 1) | (self.log_train_labels == 2) | (self.log_train_labels == 3)
+        active_idxs = (self.log_train_labels == 4) | (self.log_train_labels == 5) | (self.log_train_labels == 6) | \
+                      (self.log_train_labels == 7) | (self.log_train_labels == 24)
+        nonactive_idxs_test = (self.log_test_labels == 1) | (self.log_test_labels == 2) | (self.log_test_labels == 3)
+        active_idxs_test = (self.log_test_labels == 4) | (self.log_test_labels == 5) | (self.log_test_labels == 6) | \
+                      (self.log_test_labels == 7) | (self.log_test_labels == 24)
+        self.log_train_labels[nonactive_idxs] = 0
+        self.log_test_labels[nonactive_idxs_test] = 0
+        self.log_train_labels[active_idxs] = 1
+        self.log_test_labels[active_idxs_test] = 1
+
+        self.m, self.n = np.shape(self.log_train_data)
+        self.theta = np.random.rand(self.n)  # before: (n, k)
+
+    def predict(self):
         '''
             Return predicted class for input_data
         '''
-        return self.h(input_data)
+        # return util.sigmoid(self.theta.T.dot(input_data))
+        predictions = self.h(self.log_test_data)
+        predictions[predictions >= 0.5] = 1
+        predictions[predictions < 0.5] = 0
+        acc_sum = 0
+        for pred_i, t_label_i in zip(predictions, self.log_test_labels):
+            if pred_i == t_label_i:
+                acc_sum += 1
+
+        accuracy = acc_sum / np.alen(self.log_test_labels)
+        print(accuracy)
+        return accuracy
+
+    def h(self, x):
+        """
+        :param x:
+        :return hypothesis. Sigmoid in this case:
+        """
+        return util.sigmoid(x @ self.theta)  # The hypothesis function. Sigmoid in this case
 
     def train(self, batch_size=50):
         '''
@@ -32,32 +76,22 @@ class RegressionLearner(DataLoader):
         '''
         self.stochastic_train(batch_size)
 
-    def h(self, x):
-        '''
-            The hypothesis function. Sigmoid in this case
-        '''
-        return util.sigmoid(self.theta.T.dot(x))
-
     def stochastic_train(self, batch_size=50):
         '''
             Trains RegressionLearner on self.train_data
         '''
         print("Beginning training...")
-        train_data = self.train_data
 
-        delta = 1e25
-
-        while (delta > self.eps):
+        delta = np.inf
+        while delta > self.eps:
 
             theta_previous = np.copy(self.theta)
-            for _ in range(batch_size):
-                i = np.random.randint(0, self.m)
-                row = self.raw_data[i, :]
-
+            # for _ in range(batch_size):
+            for i in range(self.m):
+                # i = np.random.randint(0, self.m)
+                row = self.log_train_data[i, :]
                 for j in range(self.n):
-                    self.theta[j] += self.alpha * (self.activity_ID[i] - self.h(row)) * row[j]
+                    self.theta[j] += self.alpha * (self.log_train_labels[i] - self.h(row)) * row[j]
 
-
-            delta = np.abs(np.linalg.norm(self.theta - theta_previous))
+            delta = np.linalg.norm(self.theta - theta_previous)**2
             print(delta)
-
