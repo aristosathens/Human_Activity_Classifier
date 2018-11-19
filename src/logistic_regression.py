@@ -19,6 +19,8 @@ class RegressionLearner(DataLoader):
             Init data specific to RegressionLearner
         '''
 
+        self.train_data = self.train_data[:, (2, 4, 5, 6)]
+        self.test_data = self.test_data[:, (2, 4, 5, 6)]
         bool_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3) | \
                     (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
                     (self.train_labels == 7) | (self.train_labels == 24)
@@ -61,6 +63,7 @@ class RegressionLearner(DataLoader):
 
         accuracy = acc_sum / np.alen(self.log_test_labels)
         print(accuracy)
+        print(self.theta)
         return accuracy
 
     def h(self, x):
@@ -74,21 +77,39 @@ class RegressionLearner(DataLoader):
         '''
             Train RegressionLearner 
         '''
-        self.stochastic_train(batch_size)
+        # self.stochastic_train()
+        self.batch_train()
 
-    def stochastic_train(self, batch_size=50):
+    def batch_train(self):
+        """
+            Trains RegressionLearner on self.train_data
+        """
+        print("Beginning batch grad descent training...")
+
+        delta = np.inf
+        iter = 0
+        while delta > self.eps and iter < 5000:
+
+            theta_previous = np.copy(self.theta)
+            for j in range(self.n):
+                self.theta[j] += self.alpha * ((self.log_train_labels - self.h(self.log_train_data)) @
+                                 self.log_train_data[:, j])
+
+            delta = np.linalg.norm(self.theta - theta_previous) ** 2
+            print(np.linalg.norm(self.theta))
+            iter += 1
+
+    def stochastic_train(self):
         '''
             Trains RegressionLearner on self.train_data
         '''
-        print("Beginning training...")
+        print("Beginning stochastic gradient descent training...")
 
         delta = np.inf
         while delta > self.eps:
 
             theta_previous = np.copy(self.theta)
-            # for _ in range(batch_size):
             for i in range(self.m):
-                # i = np.random.randint(0, self.m)
                 row = self.log_train_data[i, :]
                 for j in range(self.n):
                     self.theta[j] += self.alpha * (self.log_train_labels[i] - self.h(row)) * row[j]
