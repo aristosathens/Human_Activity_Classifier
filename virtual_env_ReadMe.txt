@@ -1,3 +1,9 @@
+!!!
+	NOTE: I think we can all use the same virtual environment that is on GitHub. Not sure. Before pulling
+	the whole repo, follow the steps to download virtualenv, but do not create a new environment. Try
+	to use the one on GitHub first.
+!!!
+
 
 # -------------------------------------- Description -------------------------------------- #
 
