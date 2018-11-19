@@ -65,23 +65,33 @@ class DeepLearner(DataLoader):
             print("Warning: Loss type not set. Using default: ", LossStrings[LossType.default])
             self.loss = LossType.default
 
-        if self.accuracy == None:
+        if self.metric == None:
             print("Warning: Accuracy type not set. Using default: ", AccuracyStrings[AccuracyType.default])
-            self.accuracy = AccuracyType.default
+            self.metric = AccuracyType.default
 
         # Set the training rules for the Keras model
         self.model.compile(optimizer = OptimizerStrings[self.optimizer],
                             loss = LossStrings[self.loss],
-                            metrics = [AccuracyStrings[self.accuracy]]
+                            metrics = [AccuracyStrings[self.metric]]
                             )
 
 
     def predict(self, input_data):
+        '''
+            Predict labels for the input data.
+        '''
         return self.model.predict(input_data)
 
-    def loss(self):
+    def accuracy(self):
+        '''
+            Return validation loss/accuracy.
+        '''
         labels = keras.utils.to_categorical(self.test_labels, num_classes = self.k)
-        return self.model.evaluate(self.test_data, self.test_labels)
+        return self.model.evaluate(self.test_data, labels)
+
+    # def loss(self):
+    #     labels = keras.utils.to_categorical(self.test_labels, num_classes = self.k)
+    #     return self.model.evaluate(self.test_data, self.test_labels)
 
 
     def train(self,
@@ -120,10 +130,7 @@ class DeepLearner(DataLoader):
         if x == None:
             x = self.train_data
             labels = self.train_labels
-        print("labels shape is: ", labels.shape)
         labels = keras.utils.to_categorical(labels, num_classes = self.k)
-        print("labels shape is: ", labels.shape)
-        print("x shape is: ", x.shape)
 
         # Fit model to data
         self.model.fit(x, labels, epochs = self.epochs, batch_size = self.batch_size)
@@ -190,11 +197,13 @@ class DeepLearner(DataLoader):
         self.model = Sequential()
         self.model.add(Dense(64, activation='relu', input_dim = self.n))
         self.model.add(Dropout(0.5))
+        self.model.add(Dense(128, activation='relu'))
+        self.model.add(Dropout(0.5))
         self.model.add(Dense(64, activation='relu'))
         self.model.add(Dropout(0.5))
         self.model.add(Dense(self.k, activation='softmax'))
 
         self.loss = LossType.categorical_crossentropy
         self.optimizer = OptimizerType.SGD
-        self.accuracy = AccuracyType.accuracy
+        self.metric = AccuracyType.accuracy
         self.set_learning_params()

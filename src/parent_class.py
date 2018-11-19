@@ -69,7 +69,7 @@ class DataLoader():
         self.architecture = architecture
         self.activation = activation
         self.optimizer = optimizer
-        self.accuracy = metric
+        self.metric = metric
         self.loss = loss
 
         self.read_data(file_name, percent_validation)
