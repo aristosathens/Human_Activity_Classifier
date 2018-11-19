@@ -145,30 +145,30 @@ class DataLoader():
         '''
 
         # TODO: Split data into train/validation set
-        a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
+        a = 1  # a == 1 excludes the first column from the raw_data matrix (time stamp column)
         self.raw_data = person1_data_matrix_fixed[:, a:]
-        self.assign_data_indices(a)
-        self.m, self.n = self.raw_data.shape
+        self.assign_data_indices(a + 1)  # will be using data from training/test sets, which won't have label column
 
-        self.labels = self.activity_ID
         self.k = int(np.max(np.unique(activity_ID))) + 1
 
-        self.split_data(person1_data_matrix_fixed, percent_validation)
+        self.split_data(percent_validation)
 
-
-    def split_data(self, data, percent_validation):
+    def split_data(self, percent_validation):
         '''
             Splits data into training and validation sets.
             Requires self.raw_data
         '''
-        n = data.shape[0]
+
+        n = self.raw_data.shape[0]
         num_validation = int(percent_validation * n)
+        np.random.shuffle(self.raw_data)
 
-        self.test_data = self.raw_data[:num_validation, :]
-        self.test_labels = self.labels[:num_validation]
+        # TODO:go through each section and select the percentage from each section than the whole data set at once?-nav
+        self.test_data = self.raw_data[:num_validation, 1:]
+        self.test_labels = self.raw_data[:num_validation, 0]
 
-        self.train_data = self.raw_data[num_validation:, :]
-        self.train_labels = self.labels[num_validation:]
+        self.train_data = self.raw_data[num_validation:, 1:]
+        self.train_labels = self.raw_data[num_validation:, 0]
 
     def assign_data_indices(self, a):
         '''
