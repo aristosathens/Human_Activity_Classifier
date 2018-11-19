@@ -93,13 +93,11 @@ class DataLoader():
         person1_data_matrix = np.zeros((nrows, ncols))
 
         #person1_data_list = list(list())
-        # for row_ind in range(nrows):
         for i, row in enumerate(person1_data_numpy):
             row_list = row[0].split()
             row_array = np.asarray(row_list)
             row_array_floats = row_array.astype(np.float)
             person1_data_matrix[i, :] = row_array_floats
-
 
         # discard data that includes activityID = 0
         activity_ID = person1_data_matrix[:, 1]
@@ -144,9 +142,9 @@ class DataLoader():
         self.ankle_magnet = IMU_ankle[:, 10:12]
         '''
 
-        # TODO: Split data into train/validation set
         a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
         self.raw_data = person1_data_matrix_fixed[:, a:]
+        # self.clean_data()
         self.assign_data_indices(a)
         self.m, self.n = self.raw_data.shape
 
@@ -169,6 +167,19 @@ class DataLoader():
 
         self.train_data = self.raw_data[num_validation:, :]
         self.train_labels = self.labels[num_validation:]
+
+    def clean_data(self):
+        '''
+            Does data preprocessing.
+            Requires self.raw_data.
+
+            -- > Currently does not work as expected < --
+        '''
+        # 0 center the data
+        self.raw_data -= np.mean(self.raw_data, axis=0)
+
+        # Scale the data
+        self.raw_data /= np.std(self.raw_data, axis=0)
 
     def assign_data_indices(self, a):
         '''

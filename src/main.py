@@ -34,6 +34,14 @@ def main():
                                         architecture = ArchitectureType.MLP_multiclass
                                         )
     learner.train(epochs = 100)
+    accuracy = learner.history.history["acc"]
+    loss = util.normalize(learner.history.history["loss"])
+    util.plot(data = [accuracy, loss],
+                title = "Accuracy, Loss v Time",
+                x_label = "Epochs",
+                labels = ["Training Accuracy", "Normalized Loss"],
+                file_name = output_folder_name + "Accuracy, Loss v Time.png"
+                )
     accuracy = learner.accuracy()
     print(accuracy)
 
