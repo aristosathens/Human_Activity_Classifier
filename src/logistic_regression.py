@@ -21,6 +21,7 @@ class RegressionLearner(DataLoader):
 
         self.train_data = self.train_data[:, (2, 4, 5, 6)]
         self.test_data = self.test_data[:, (2, 4, 5, 6)]
+
         bool_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3) | \
                     (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
                     (self.train_labels == 7) | (self.train_labels == 24)

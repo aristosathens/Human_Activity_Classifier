@@ -23,8 +23,7 @@ def main():
     dir_path = os.path.dirname(os.path.realpath(__file__))
     output_folder_name = "./../output/"
     models_folder_name = "./../models/"
-    # data_file_name = "./../data/subject101.dat"
-    data_file_name = '../../PAMAP2_Dataset/Protocol/subject101.dat'
+    data_file_name = './../data/cleanData.csv'
 
     # ---------------------------- Neural Net Model -------------------------------------
     # Create DeepLearner object, train it
