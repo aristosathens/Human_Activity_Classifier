@@ -79,11 +79,85 @@ class DataLoader:
 
     def read_data(self, file_name, percent_validation=0.15):
         '''
+<<<<<<< HEAD
             Read data from file_name, store in DataLoader class
         '''
 
         person1_data_numpy = np.loadtxt(file_name, delimiter=" ")
         nrows, _ = person1_data_numpy.shape
+=======
+            Read data from file_name, store in DataLoader
+        '''
+        person1_data_file = file_name
+        person1_data = pd.read_table(person1_data_file)
+        person1_data_numpy = person1_data.values
+        nrows,_ = person1_data_numpy.shape
+        ncols = 54
+
+        #convert the string of data for each row into array
+        person1_data_matrix = np.zeros((nrows, ncols))
+
+        #person1_data_list = list(list())
+        for i, row in enumerate(person1_data_numpy):
+            row_list = row[0].split()
+            row_array = np.asarray(row_list)
+            row_array_floats = row_array.astype(np.float)
+            person1_data_matrix[i, :] = row_array_floats
+
+        # discard data that includes activityID = 0
+        activity_ID = person1_data_matrix[:, 1]
+        good_data_count = 0
+        for i in range(nrows):
+            if activity_ID[i] != 0:
+                good_data_count += 1
+
+        person1_data_matrix_fixed = np.zeros((good_data_count, ncols))
+        count = 0
+        for i in range(nrows):
+            if activity_ID[i] != 0:
+                person1_data_matrix_fixed[count, :] = person1_data_matrix[i, :]
+                count += 1
+
+        # Remove all rows with Nan
+        person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
+
+        #extract data
+        self.timestamp = person1_data_matrix_fixed[:,0]
+        self.activity_ID = person1_data_matrix_fixed[:,1]
+
+        '''
+        self.heart_rate = person1_data_matrix_fixed[:,2]
+
+        IMU_hand = person1_data_matrix_fixed[:,3:19]
+        self.hand_temp = IMU_hand[:,0]
+        self.hand_accel = IMU_hand[:,1:3] #only use the +-16g sensor, as noted in the readme
+        self.hand_gyro = IMU_hand[:,7:9]
+        self.hand_magnet = IMU_hand[:,10:12]
+
+        IMU_chest = person1_data_matrix_fixed[:, 20:36]
+        self.chest_temp = IMU_chest[:, 0]
+        self.chest_accel = IMU_chest[:, 1:3]  # only use the +-16g sensor, as noted in the readme
+        self.chest_gyro = IMU_chest[:, 7:9]
+        self.chest_magnet = IMU_chest[:, 10:12]
+
+        IMU_ankle = person1_data_matrix_fixed[:,37:53]
+        self.ankle_temp = IMU_ankle[:, 0]
+        self.ankle_accel = IMU_ankle[:, 1:3]  # only use the +-16g sensor, as noted in the readme
+        self.ankle_gyro = IMU_ankle[:, 7:9]
+        self.ankle_magnet = IMU_ankle[:, 10:12]
+        '''
+
+        a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
+        self.raw_data = person1_data_matrix_fixed[:, a:]
+        # self.clean_data()
+        self.assign_data_indices(a)
+        self.m, self.n = self.raw_data.shape
+
+        self.labels = self.activity_ID
+        self.k = int(np.max(np.unique(activity_ID))) + 1
+
+        self.split_data(person1_data_matrix_fixed, percent_validation)
+>>>>>>> aristos_branch
 
         a = 1  # a == 1 excludes the first column from the raw_data matrix (time stamp column)
         self.raw_data = person1_data_numpy[:, a:]
@@ -104,6 +178,19 @@ class DataLoader:
         self.train_data = self.raw_data[num_validation:, 1:]
         self.train_labels = self.raw_data[num_validation:, 0]
         self.m, self.n = self.train_data.shape
+
+    def clean_data(self):
+        '''
+            Does data preprocessing.
+            Requires self.raw_data.
+
+            -- > Currently does not work as expected < --
+        '''
+        # 0 center the data
+        self.raw_data -= np.mean(self.raw_data, axis=0)
+
+        # Scale the data
+        self.raw_data /= np.std(self.raw_data, axis=0)
 
     def assign_data_indices(self, a):
         '''

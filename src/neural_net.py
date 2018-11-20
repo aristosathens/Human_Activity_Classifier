@@ -84,15 +84,10 @@ class DeepLearner(DataLoader):
 
     def accuracy(self):
         '''
-            Return validation loss/accuracy.
+            Return validation loss and accuracy.
         '''
         labels = keras.utils.to_categorical(self.test_labels, num_classes = self.k)
         return self.model.evaluate(self.test_data, labels)
-
-    # def loss(self):
-    #     labels = keras.utils.to_categorical(self.test_labels, num_classes = self.k)
-    #     return self.model.evaluate(self.test_data, self.test_labels)
-
 
     def train(self,
                 x = None,
@@ -133,7 +128,7 @@ class DeepLearner(DataLoader):
         labels = keras.utils.to_categorical(labels, num_classes = self.k)
 
         # Fit model to data
-        self.model.fit(x, labels, epochs = self.epochs, batch_size = self.batch_size)
+        self.history = self.model.fit(x, labels, epochs = self.epochs, batch_size = self.batch_size)
 
 
     def train_on_batch(self, x, labels):
@@ -186,6 +181,16 @@ class DeepLearner(DataLoader):
             self.model = keras.models.load_model(self.model_folder + name)
 
 
+    def info_string(self):
+        '''
+            Returns string of info about class
+        '''
+        info = ""
+        for feature in [self.architecture, self.optimizer, self.loss]:
+            info += FeatureDictionary[feature] + ". "
+        return info
+
+
     # ------------------------------------- Architectures ------------------------------------- #
 
     def setup_MLP_multiclass(self):
@@ -195,11 +200,9 @@ class DeepLearner(DataLoader):
         print("Setting up MLP multiclass nueral net architecture.")
 
         self.model = Sequential()
-        self.model.add(Dense(64, activation='relu', input_dim = self.n))
+        self.model.add(Dense(512, activation='relu', input_dim = self.n))
         self.model.add(Dropout(0.5))
-        self.model.add(Dense(128, activation='relu'))
-        self.model.add(Dropout(0.5))
-        self.model.add(Dense(64, activation='relu'))
+        self.model.add(Dense(512, activation='relu'))
         self.model.add(Dropout(0.5))
         self.model.add(Dense(self.k, activation='softmax'))
 
