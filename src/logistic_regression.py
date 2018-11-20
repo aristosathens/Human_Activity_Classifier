@@ -19,8 +19,14 @@ class RegressionLearner(DataLoader):
             Init data specific to RegressionLearner
         '''
 
-        self.train_data = self.train_data[:, (2, 4, 5, 6)]
-        self.test_data = self.test_data[:, (2, 4, 5, 6)]
+        # Select specific features (e.g. Hand IMU and heart rate only)
+        # Note: time column has been taken out so column indices shift over from data documentation
+        # self.train_data = self.train_data[:, (2, 4, 5, 6)]
+        # self.test_data = self.test_data[:, (2, 4, 5, 6)]
+
+        # Add intercept term (add column of 1's to x mattrix)
+        self.train_data = self.add_intercept(self.train_data)
+        self.test_data = self.add_intercept(self.test_data)
 
         bool_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3) | \
                     (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
@@ -34,7 +40,7 @@ class RegressionLearner(DataLoader):
         self.log_test_data = self.test_data[bool_idxs_test]
         self.log_test_labels = self.test_labels[bool_idxs_test]
 
-        # replace 1, 2, 3 with 0 and 4, 5, 6, 7, 24 with 1
+        # replace labels 1, 2, 3 with 0 and 4, 5, 6, 7, 24 with 1
         nonactive_idxs = (self.log_train_labels == 1) | (self.log_train_labels == 2) | (self.log_train_labels == 3)
         active_idxs = (self.log_train_labels == 4) | (self.log_train_labels == 5) | (self.log_train_labels == 6) | \
                       (self.log_train_labels == 7) | (self.log_train_labels == 24)
@@ -47,7 +53,23 @@ class RegressionLearner(DataLoader):
         self.log_test_labels[active_idxs_test] = 1
 
         self.m, self.n = np.shape(self.log_train_data)
-        self.theta = np.random.rand(self.n)  # before: (n, k)
+        # self.theta = np.random.rand(self.n)  # before: (n, k)
+        self.theta = np.zeros(self.n)
+
+    def add_intercept(self, x):
+        """Add intercept to matrix x.
+
+        Args:
+            x: 2D NumPy array.
+
+        Returns:
+            New matrix same as x with 1's in the 0th column.
+        """
+        new_x = np.zeros((x.shape[0], x.shape[1] + 1), dtype=x.dtype)
+        new_x[:, 0] = 1
+        new_x[:, 1:] = x
+
+        return new_x
 
     def predict(self):
         '''
@@ -89,7 +111,7 @@ class RegressionLearner(DataLoader):
 
         delta = np.inf
         iter = 0
-        while delta > self.eps and iter < 5000:
+        while delta > self.eps and iter < 50:
 
             theta_previous = np.copy(self.theta)
             for j in range(self.n):
