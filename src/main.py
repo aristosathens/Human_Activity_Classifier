@@ -6,6 +6,7 @@
 
 import os
 import sys
+import datetime
 
 import logistic_regression
 import neural_net
@@ -33,26 +34,23 @@ def main():
                                         batch_size = 200,
                                         architecture = ArchitectureType.MLP_multiclass
                                         )
-    learner.train(epochs = 100)
+    learner.train(epochs = 200)
+
+    # Plot learner info
     accuracy = learner.history.history["acc"]
     loss = util.normalize(learner.history.history["loss"])
+
+    time_string = str(datetime.datetime.now().isoformat(' ', 'minutes'))
+    info = learner.info_string()
     util.plot(data = [accuracy, loss],
-                title = "Accuracy, Loss v Time",
+                title = "Accuracy, Loss v Epochs",
                 x_label = "Epochs",
                 labels = ["Training Accuracy", "Normalized Loss"],
-                file_name = output_folder_name + "Accuracy, Loss v Time.png"
+                file_name = output_folder_name + "Accuracy, Loss v Time " + time_string +".png",
+                fig_text = info
                 )
     accuracy = learner.accuracy()
     print(accuracy)
-
-
-    # Create object, train it
-    # learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, models_folder_name, learning_rate=1e-2)
-    # learner.train(batch_size=500)
-    # Use plot() from our util.py package
-    # util.plot([learner.hand_accel], show=True, title="Hand Accel vs Time")
-    # util.plot([learner.chest_accel, learner.chest_gyro], show=True, title="Chest Accel & Chest Gyro vs Time")
-    # util.plot([learner.activity_ID], show=True, title="Activity ID v Time")
 
 
 if __name__ == "__main__":

@@ -51,6 +51,7 @@ def plot(data,
         x_label = None,
         y_label = None,
         labels = None,
+        fig_text = None,
         show = True,
         file_name = None,
         ):
@@ -73,6 +74,9 @@ def plot(data,
 
     if y_label != None:
         plt.ylabel(y_label)
+
+    if fig_text != None:
+        plt.text(0, 1, fig_text)
 
     if file_name != None:
         plt.savefig(file_name)

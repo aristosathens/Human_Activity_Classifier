@@ -89,8 +89,6 @@ class DeepLearner(DataLoader):
         labels = keras.utils.to_categorical(self.test_labels, num_classes = self.k)
         return self.model.evaluate(self.test_data, labels)
 
-
-
     def train(self,
                 x = None,
                 labels = None,
@@ -183,6 +181,16 @@ class DeepLearner(DataLoader):
             self.model = keras.models.load_model(self.model_folder + name)
 
 
+    def info_string(self):
+        '''
+            Returns string of info about class
+        '''
+        info = ""
+        for feature in [self.architecture, self.optimizer, self.loss]:
+            info += FeatureDictionary[feature] + ". "
+        return info
+
+
     # ------------------------------------- Architectures ------------------------------------- #
 
     def setup_MLP_multiclass(self):
@@ -192,9 +200,9 @@ class DeepLearner(DataLoader):
         print("Setting up MLP multiclass nueral net architecture.")
 
         self.model = Sequential()
-        self.model.add(Dense(256, activation='relu', input_dim = self.n))
+        self.model.add(Dense(512, activation='relu', input_dim = self.n))
         self.model.add(Dropout(0.5))
-        self.model.add(Dense(256, activation='relu'))
+        self.model.add(Dense(512, activation='relu'))
         self.model.add(Dropout(0.5))
         self.model.add(Dense(self.k, activation='softmax'))
 
