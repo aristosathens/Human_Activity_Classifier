@@ -108,6 +108,7 @@ class LossType(enum.Enum):
 '''
     Use these if you want to convert enumType --> string
 '''
+
 ArchitectureStrings = {}
 ArchitectureStrings[ArchitectureType.MLP_multiclass] = "MLP_multiclass"
 

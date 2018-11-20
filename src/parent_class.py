@@ -1,11 +1,14 @@
 # Zach Blum, Navjot Singh, Aristos Athens
 
-"""
+'''
     Defines enumerated types, DataLoader parent class and various subclasses like RegressionLearner, etc.
-"""
+'''
+
+import os
 
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 
 import util
 from enum_types import *
@@ -13,35 +16,36 @@ from enum_types import *
 
 # ------------------------------------- Class ------------------------------------- #
 
-class DataLoader:
-    """
+class DataLoader():
+    '''
         Use to load data and store it as an object.
         m - number of data points
         n - number of input features
         k - number of classes
-    """
+    '''
 
     def __init__(self,
-                 file_name,
-                 output_folder,
-                 model_folder,
-                 percent_validation=0.15,
-                 batch_size=None,
-                 learning_rate=0.1,
-                 epsilon=1e-2,
-                 epochs=None,
+                file_name,
+                output_folder,
+                model_folder,
+                percent_validation = 0.15,
+                batch_size = None,
+                learning_rate = 0.1,
+                epsilon = 1e-2,
+                epochs = None,
 
-                 architecture=None,
-                 activation=None,
-                 optimizer=None,
-                 metric=None,
-                 loss=None,
-                 ):
+                architecture = None,
+                activation = None,
+                optimizer = None,
+                metric = None,
+                loss = None,
+                ):
         '''
             Initialize DataLoader
 
             file_name - path to data file
             output_folder - path to output directory
+            model_folder - path to directory for saving/loading models
             percent_validation - fraction of data to use for validation
             batch_size - size of each batch for training. If None, don't use batches. Can be overwritten in self.train()
             learning_rate - learning rate for update rule
@@ -71,52 +75,18 @@ class DataLoader:
         self.metric = metric
         self.loss = loss
 
-        self.read_data(file_name, percent_validation)
-
+        self.init_data(file_name, percent_validation)
         self.child_init()
 
         print("Finish Initializing DataLoader object.")
 
-    def read_data(self, file_name, percent_validation=0.15):
-        '''
-<<<<<<< HEAD
-            Read data from file_name, store in DataLoader class
-        '''
 
-        person1_data_numpy = np.loadtxt(file_name, delimiter=" ")
-        nrows, _ = person1_data_numpy.shape
-=======
+    def init_data(self, file_name, percent_validation=0.15):
+        '''
             Read data from file_name, store in DataLoader
         '''
-        person1_data_file = file_name
-        person1_data = pd.read_table(person1_data_file)
-        person1_data_numpy = person1_data.values
-        nrows,_ = person1_data_numpy.shape
-        ncols = 54
-
-        #convert the string of data for each row into array
-        person1_data_matrix = np.zeros((nrows, ncols))
-
-        #person1_data_list = list(list())
-        for i, row in enumerate(person1_data_numpy):
-            row_list = row[0].split()
-            row_array = np.asarray(row_list)
-            row_array_floats = row_array.astype(np.float)
-            person1_data_matrix[i, :] = row_array_floats
-
-        # discard data that includes activityID = 0
-        activity_ID = person1_data_matrix[:, 1]
-        good_data_count = 0
-        for i in range(nrows):
-            if activity_ID[i] != 0:
-                good_data_count += 1
-
-        person1_data_matrix_fixed = np.zeros((good_data_count, ncols))
-        count = 0
-        for i in range(nrows):
-            if activity_ID[i] != 0:
-                person1_data_matrix_fixed[count, :] = person1_data_matrix[i, :]
-                count += 1
+        # Get data from .dat and/or .csv files
+        person1_data_matrix_fixed = self.convert_data(file_name)
 
         # Remove all rows with Nan
         person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
@@ -125,28 +95,6 @@ class DataLoader:
         self.timestamp = person1_data_matrix_fixed[:,0]
         self.activity_ID = person1_data_matrix_fixed[:,1]
 
-        '''
-        self.heart_rate = person1_data_matrix_fixed[:,2]
-
-        IMU_hand = person1_data_matrix_fixed[:,3:19]
-        self.hand_temp = IMU_hand[:,0]
-        self.hand_accel = IMU_hand[:,1:3] #only use the +-16g sensor, as noted in the readme
-        self.hand_gyro = IMU_hand[:,7:9]
-        self.hand_magnet = IMU_hand[:,10:12]
-
-        IMU_chest = person1_data_matrix_fixed[:, 20:36]
-        self.chest_temp = IMU_chest[:, 0]
-        self.chest_accel = IMU_chest[:, 1:3]  # only use the +-16g sensor, as noted in the readme
-        self.chest_gyro = IMU_chest[:, 7:9]
-        self.chest_magnet = IMU_chest[:, 10:12]
-
-        IMU_ankle = person1_data_matrix_fixed[:,37:53]
-        self.ankle_temp = IMU_ankle[:, 0]
-        self.ankle_accel = IMU_ankle[:, 1:3]  # only use the +-16g sensor, as noted in the readme
-        self.ankle_gyro = IMU_ankle[:, 7:9]
-        self.ankle_magnet = IMU_ankle[:, 10:12]
-        '''
-
         a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
         self.raw_data = person1_data_matrix_fixed[:, a:]
         # self.clean_data()
@@ -154,30 +102,111 @@ class DataLoader:
         self.m, self.n = self.raw_data.shape
 
         self.labels = self.activity_ID
-        self.k = int(np.max(np.unique(activity_ID))) + 1
+        self.k = int(np.max(np.unique(self.activity_ID))) + 1
 
         self.split_data(person1_data_matrix_fixed, percent_validation)
->>>>>>> aristos_branch
 
-        a = 1  # a == 1 excludes the first column from the raw_data matrix (time stamp column)
-        self.raw_data = person1_data_numpy[:, a:]
-        self.assign_data_indices(a + 1)  # a+1 b/c will be using data from training/test sets, which won't have label column
-        self.split_data(percent_validation)
+        import collections
+        print("Label frequency: ", collections.Counter(self.labels))
 
-    def split_data(self, percent_validation):
+
+    def convert_data(self, data_folder):
+        '''
+            Convert data from .dat to .csv (or use .csv if available)
+        '''
+        all_subjects_data_matrix = None
+        directory = os.fsencode(data_folder)
+
+        # Iterate through all files in data directory
+        for file in os.listdir(directory):
+            file_name = os.fsdecode(file)
+            
+            # Check if file is data file
+            if file_name.endswith(".dat"):
+                print(file_name[:-4] + ".csv")
+
+                # Check if csv version of file already exists
+                if os.path.isfile(file_name[:-4] + ".csv"):
+                    dat = np.genfromtxt (file_name[:-4] + ".csv", delimiter=",")
+                else:
+                    dat = self.read_data(data_folder + file_name)
+                
+                # Add data to matrix
+                if all_subjects_data_matrix is None:
+                    all_subjects_data_matrix = dat
+                else:
+                    all_subjects_data_matrix = np.append(all_subjects_data_matrix, dat, axis=0)
+
+        np.random.shuffle(all_subjects_data_matrix)
+        np.savetxt(data_folder + 'cleanData.csv', all_subjects_data_matrix, fmt='%.5f', delimiter=" ")
+
+        return all_subjects_data_matrix
+
+
+    def read_data(self, data_file_name):
+        """
+            Read data from file_name, store in DataLoader
+        """
+        # Read raw data
+        person1_data = pd.read_table(data_file_name)
+        person1_data_numpy = person1_data.values
+        nrows, _ = person1_data_numpy.shape
+        ncols = 54
+
+        # Convert the string of data for each row into array
+        person1_data_matrix = np.zeros((nrows, ncols))
+
+        # Person1_data_list = list(list())
+        for i, row in enumerate(person1_data_numpy):
+            row_list = row[0].split()
+            row_array = np.asarray(row_list)
+            row_array_floats = row_array.astype(np.float)
+            person1_data_matrix[i, :] = row_array_floats
+
+        # Discard data that includes activityID = 0
+        activity_ID = person1_data_matrix[:, 1]
+        good_data_count = 0
+        for i in range(nrows):
+            if activity_ID[i] != 0:
+                good_data_count += 1
+
+        # Remove data with label 0
+        person1_data_matrix_fixed = np.zeros((good_data_count, ncols))
+        count = 0
+        for i in range(nrows):
+            if activity_ID[i] != 0:
+                person1_data_matrix_fixed[count, :] = person1_data_matrix[i, :]
+                count += 1
+
+        prev_heart_rate = np.nan
+        # Fill in heart rate values with previous time-stamp values
+        for i in range(np.alen(person1_data_matrix_fixed)):
+            if not np.isnan(person1_data_matrix_fixed[i, 2]):
+                prev_heart_rate = person1_data_matrix_fixed[i, 2]
+                continue
+            if np.isnan(person1_data_matrix_fixed[i, 2]) and not np.isnan(prev_heart_rate):
+                person1_data_matrix_fixed[i, 2] = prev_heart_rate
+
+        # Remove all rows with Nan
+        person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
+
+        return person1_data_matrix_fixed
+
+
+    def split_data(self, data, percent_validation):
         '''
             Splits data into training and validation sets.
             Requires self.raw_data
         '''
-
-        n = self.raw_data.shape[0]
+        n = data.shape[0]
         num_validation = int(percent_validation * n)
-        self.test_data = self.raw_data[:num_validation, 1:]
-        self.test_labels = self.raw_data[:num_validation, 0]
 
-        self.train_data = self.raw_data[num_validation:, 1:]
-        self.train_labels = self.raw_data[num_validation:, 0]
-        self.m, self.n = self.train_data.shape
+        self.test_data = self.raw_data[:num_validation, :]
+        self.test_labels = self.labels[:num_validation]
+
+        self.train_data = self.raw_data[num_validation:, :]
+        self.train_labels = self.labels[num_validation:]
+
 
     def clean_data(self):
         '''
@@ -191,6 +220,7 @@ class DataLoader:
 
         # Scale the data
         self.raw_data /= np.std(self.raw_data, axis=0)
+
 
     def assign_data_indices(self, a):
         '''
@@ -259,6 +289,3 @@ class DataLoader:
 
     def load(self):
         raise Exception("DataLoader does not implement self.load(). Child class must implement it.")
-
-
-

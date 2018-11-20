@@ -76,7 +76,7 @@ def plot(data,
         plt.ylabel(y_label)
 
     if fig_text != None:
-        plt.text(0, 1, fig_text)
+        plt.text(-0.5, 0, fig_text)
 
     if file_name != None:
         plt.savefig(file_name)
