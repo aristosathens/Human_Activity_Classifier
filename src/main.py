@@ -39,7 +39,8 @@ def main():
 
     # ----------------------- Logistic Regression model ---------------------------------
     learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, models_folder_name,
-                                                    epsilon=25.0, learning_rate=1e-2)
+                                                    percent_validation=0.3, epsilon=1.0, learning_rate=1e-2,
+                                                    use_lib=False)
     learner.train(batch_size=500)
     learner.predict()
     # Use plot() from our util.py package

@@ -36,6 +36,7 @@ class DataLoader:
                  optimizer=None,
                  metric=None,
                  loss=None,
+                 use_lib=False
                  ):
         '''
             Initialize DataLoader
@@ -64,6 +65,7 @@ class DataLoader:
         self.epochs = epochs
         self.alpha = learning_rate
         self.eps = epsilon
+        self.use_lib = use_lib
 
         self.architecture = architecture
         self.activation = activation
@@ -75,13 +77,13 @@ class DataLoader:
 
         self.child_init()
 
-        print("Finish Initializing DataLoader object.")
+        print("Finished Initializing DataLoader object.")
 
     def read_data(self, file_name, percent_validation=0.15):
         '''
             Read data from file_name, store in DataLoader class
         '''
-
+        print("Reading file...")
         person1_data_numpy = np.loadtxt(file_name, delimiter=" ")
         nrows, _ = person1_data_numpy.shape
 
