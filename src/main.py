@@ -39,10 +39,10 @@ def main():
 
     # ----------------------- Logistic Regression model ---------------------------------
     learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, models_folder_name,
-                                                    percent_validation=0.3, epsilon=1.0, learning_rate=1e-2,
-                                                    use_lib=False)
-    learner.train(batch_size=500)
-    learner.predict()
+                                                    percent_validation=0.3, epsilon=25.0, learning_rate=1e-2,
+                                                    use_lib=True)
+    learner.train()
+    # learner.predict()
     # Use plot() from our util.py package
     # util.plot([learner.hand_accel], show=True, title="Hand Accel vs Time")
     # util.plot([learner.chest_accel, learner.chest_gyro], show=True, title="Chest Accel & Chest Gyro vs Time")
