@@ -96,10 +96,10 @@ class DataLoader():
         person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
 
         #extract data
-        self.timestamp = person1_data_matrix_fixed[:,0]
-        self.activity_ID = person1_data_matrix_fixed[:,1]
+        self.timestamp = person1_data_matrix_fixed[:, 0]
+        self.activity_ID = person1_data_matrix_fixed[:, 1]
 
-        a = 2 # a == 2 excludes the first 2 columns from the raw_data matrix
+        a = 2  # a == 2 excludes the first 2 columns from the raw_data matrix
         self.raw_data = person1_data_matrix_fixed[:, a:]
         # self.clean_data()
         self.assign_data_indices(a)
@@ -120,29 +120,35 @@ class DataLoader():
         '''
         all_subjects_data_matrix = None
         directory = os.fsencode(data_folder)
+        data_file_path = data_folder + "cleanData.csv"
 
-        # Iterate through all files in data directory
-        for file in os.listdir(directory):
-            file_name = os.fsdecode(file)
-            
-            # Check if file is data file
-            if file_name.endswith(".dat"):
-                print(file_name[:-4] + ".csv")
+        # check if cleanData.csv file already exists, otherwise create it
+        if os.path.isfile(data_file_path):
+            print("Reading from {}".format(data_file_path))
+            all_subjects_data_matrix = np.loadtxt(data_file_path)
+        else:
+            # Iterate through all files in data directory
+            for file in os.listdir(directory):
+                file_name = os.fsdecode(file)
 
-                # Check if csv version of file already exists
-                if os.path.isfile(file_name[:-4] + ".csv"):
-                    dat = np.genfromtxt (file_name[:-4] + ".csv", delimiter=",")
-                else:
-                    dat = self.read_data(data_folder + file_name)
-                
-                # Add data to matrix
-                if all_subjects_data_matrix is None:
-                    all_subjects_data_matrix = dat
-                else:
-                    all_subjects_data_matrix = np.append(all_subjects_data_matrix, dat, axis=0)
+                # Check if file is data file
+                if file_name.endswith(".dat"):
+                    print(file_name[:-4] + ".csv")
 
-        np.random.shuffle(all_subjects_data_matrix)
-        np.savetxt(data_folder + 'cleanData.csv', all_subjects_data_matrix, fmt='%.5f', delimiter=" ")
+                    # Check if csv version of file already exists
+                    if os.path.isfile(file_name[:-4] + ".csv"):
+                        dat = np.genfromtxt(file_name[:-4] + ".csv", delimiter=" ")
+                    else:
+                        dat = self.read_data(data_folder + file_name)
+
+                    # Add data to matrix
+                    if all_subjects_data_matrix is None:
+                        all_subjects_data_matrix = dat
+                    else:
+                        all_subjects_data_matrix = np.append(all_subjects_data_matrix, dat, axis=0)
+
+            np.random.shuffle(all_subjects_data_matrix)
+            np.savetxt(data_file_path, all_subjects_data_matrix, fmt='%.5f', delimiter=" ")
 
         return all_subjects_data_matrix
 

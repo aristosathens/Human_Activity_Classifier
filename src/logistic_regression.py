@@ -31,11 +31,10 @@ class RegressionLearner(DataLoader):
         if not os.path.exists(self.model_folder):
             os.makedirs(self.model_folder)
 
-        if self.use_lib and self.model == 'svm':
-            self.raw_data = self.raw_data[:175000, :]  # reduce data size for svm
+        # if self.use_lib and self.model == 'svm':
+        #     self.raw_data = self.raw_data[:175000, :]  # reduce data size for svm
+        #     self.labels = self.raw_data[:175000, :]
 
-        import collections
-        print(collections.Counter(self.raw_data[:, 0]))
 
         # Scale all features to make iterative algorithm more robust
         scaler = StandardScaler(copy=False)
@@ -71,7 +70,7 @@ class RegressionLearner(DataLoader):
             self.train_data = self.add_intercept(self.train_data)
             self.test_data = self.add_intercept(self.test_data)
 
-        self.select_activities()
+        # self.select_activities()
 
         self.log_train_data = self.train_data
         self.log_train_labels = self.train_labels
@@ -129,14 +128,15 @@ class RegressionLearner(DataLoader):
         if self.use_lib:
             print("Training model with scikitlearn {}...".format(self.scilearn_model.__class__.__name__))
             # c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100, 1000, 10000]  # for log reg
-            # c_range = [0.1 1.0, 10.0, 100.0, 1000.0, 10000.0]  # for SVM
+            # c_range = [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]  # for SVM
+            c_range = [0.1]
 
             print("Starting validation curve")
             print(time.time())
             for key in self.feature_indices.keys():
-                filtered_data = self.raw_data[:, self.feature_indices[key]]
-                train_scores, test_scores = validation_curve(self.scilearn_model, filtered_data[:, 1:],
-                                                             filtered_data[:, 0], param_name="C", param_range=c_range,
+                filtered_features = self.raw_data[:, self.feature_indices[key]]
+                train_scores, test_scores = validation_curve(self.scilearn_model, filtered_features,
+                                                             self.labels, param_name="C", param_range=c_range,
                                                              cv=3, scoring="accuracy", n_jobs=-1)
                 train_scores_mean = np.mean(train_scores, axis=1)
                 train_scores_std = np.std(train_scores, axis=1)

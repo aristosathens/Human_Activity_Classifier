@@ -36,14 +36,14 @@ def read_data(data_file_name):
             person1_data_matrix_fixed[count, :] = person1_data_matrix[i, :]
             count += 1
 
-    prev_heart_rate = np.nan
-    # Fill in heart rate values with previous time-stamp values
-    for i in range(np.alen(person1_data_matrix_fixed)):
-        if not np.isnan(person1_data_matrix_fixed[i, 2]):
-            prev_heart_rate = person1_data_matrix_fixed[i, 2]
-            continue
-        if np.isnan(person1_data_matrix_fixed[i, 2]) and not np.isnan(prev_heart_rate):
-            person1_data_matrix_fixed[i, 2] = prev_heart_rate
+    # prev_heart_rate = np.nan
+    # # Fill in heart rate values with previous time-stamp values
+    # for i in range(np.alen(person1_data_matrix_fixed)):
+    #     if not np.isnan(person1_data_matrix_fixed[i, 2]):
+    #         prev_heart_rate = person1_data_matrix_fixed[i, 2]
+    #         continue
+    #     if np.isnan(person1_data_matrix_fixed[i, 2]) and not np.isnan(prev_heart_rate):
+    #         person1_data_matrix_fixed[i, 2] = prev_heart_rate
 
     # Remove all rows with Nan
     person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
@@ -87,8 +87,8 @@ if __name__ == "__main__":
 
     # *****************************Variables to change**********************************
     # Navjot's paths - comment these two out and write your own
-    output_folder_path = "./../output/"                     # CHANGE TO DESIRED LOCATION
-    proto_folder_path = '../../data/'  # CHANGE CORRECT PATH TO THE PROTOCAL FOLDER
+    output_folder_path = "./../data/"                     # CHANGE TO DESIRED LOCATION
+    proto_folder_path = './../../PAMAP2_Dataset/Protocol/'  # CHANGE CORRECT PATH TO THE PROTOCAL FOLDER
     NUM_FILES_TO_READ = 9
     # **********************************************************************************
 
