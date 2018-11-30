@@ -36,7 +36,8 @@ class DataLoader:
                  optimizer=None,
                  metric=None,
                  loss=None,
-                 use_lib=False
+                 use_lib=False,
+                 model='log_reg'
                  ):
         '''
             Initialize DataLoader
@@ -66,6 +67,7 @@ class DataLoader:
         self.alpha = learning_rate
         self.eps = epsilon
         self.use_lib = use_lib
+        self.model = model
 
         self.architecture = architecture
         self.activation = activation

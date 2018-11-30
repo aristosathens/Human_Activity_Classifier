@@ -40,7 +40,7 @@ def main():
     # ----------------------- Logistic Regression model ---------------------------------
     learner = logistic_regression.RegressionLearner(data_file_name, output_folder_name, models_folder_name,
                                                     percent_validation=0.3, epsilon=25.0, learning_rate=1e-2,
-                                                    use_lib=True)
+                                                    use_lib=True, model='svm')  # model can be 'log_reg' or 'svm'
     learner.train()
     # learner.predict()
     # Use plot() from our util.py package
