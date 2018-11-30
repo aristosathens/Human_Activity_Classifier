@@ -40,9 +40,19 @@ def softmax(x, k):
 
 # ------------------------------------- Other ------------------------------------- #
 
+def normalize(data):
+    '''
+        Normalizes data so that max magnitue is 1
+    '''
+    return data / np.max(np.abs(data))
+
 def plot(data,
         title = None,
-        show = False,
+        x_label = None,
+        y_label = None,
+        labels = None,
+        fig_text = None,
+        show = True,
         file_name = None,
         ):
     '''
@@ -52,6 +62,21 @@ def plot(data,
     '''
     for i, array in enumerate(data):
         plt.plot(array)
+
+    if labels != None:
+        plt.legend(labels)
+
+    if title != None:
+        plt.title(title)
+
+    if x_label != None:
+        plt.xlabel(x_label)
+
+    if y_label != None:
+        plt.ylabel(y_label)
+
+    if fig_text != None:
+        plt.text(-0.5, 0, fig_text)
 
     if file_name != None:
         plt.savefig(file_name)

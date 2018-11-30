@@ -108,10 +108,12 @@ class LossType(enum.Enum):
 '''
     Use these if you want to convert enumType --> string
 '''
+
 ArchitectureStrings = {}
 ArchitectureStrings[ArchitectureType.MLP_multiclass] = "MLP_multiclass"
 
 OptimizerStrings = {}
+OptimizerStrings[OptimizerType] = "SGD"
 OptimizerStrings[OptimizerType.SGD] = "SGD"
 OptimizerStrings[OptimizerType.RMSProp] = "RMSProp"
 OptimizerStrings[OptimizerType.Adagrad] = "Adagrad"
@@ -143,3 +145,10 @@ LossStrings[LossType.binary_crossentropy] = "binary_crossentropy"
 LossStrings[LossType.kullback_leibler_divergence] = "kullback_leibler_divergence"
 LossStrings[LossType.poisson] = "poisson"
 LossStrings[LossType.cosine_proximity] = "cosine_proximity"
+
+# Master dictionary for all strings
+FeatureDictionary = {}
+FeatureDictionary.update(ArchitectureStrings)
+FeatureDictionary.update(OptimizerStrings)
+FeatureDictionary.update(AccuracyStrings)
+FeatureDictionary.update(LossStrings) 
