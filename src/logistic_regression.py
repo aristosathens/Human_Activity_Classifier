@@ -33,9 +33,9 @@ class RegressionLearner(DataLoader):
         if not os.path.exists(self.model_folder):
             os.makedirs(self.model_folder)
 
-        if self.use_lib and self.model == 'svm':
-            self.raw_data = self.raw_data[:17500, :]  # reduce data size for svm
-            self.labels = self.labels[:17500]
+        # if self.use_lib and self.model == 'svm':
+        #     self.raw_data = self.raw_data[:17500, :]  # reduce data size for svm
+        #     self.labels = self.labels[:17500]
 
 
         # Scale all features to make iterative algorithm more robust
@@ -46,7 +46,9 @@ class RegressionLearner(DataLoader):
             my_scaler.transform(self.test_data)
 
         # Dict for selecting specific IMU's with heart rate sensor
-        self.feature_indices = {'hand_HR': [0, 1, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14]}
+        self.feature_indices = {'hand_ankle_chest_HR': [0, 1, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
+                                 2, 3, 4, 5, 9, 10, 11, 12, 13, 14,
+                                 19, 20, 21, 22, 26, 27, 28, 29, 30, 31]}
 
         # ********FOR TESTING******************************************** # TODO: take out
         # my_model = linear_model.LogisticRegression(solver='sag', multi_class='multinomial', max_iter=5000)
@@ -87,7 +89,7 @@ class RegressionLearner(DataLoader):
             print("Training model with scikitlearn {}...")  # .format(self.scilearn_model.__class__.__name__))
             # c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100, 1000, 10000]  # for log reg
             # c_range = [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]  # for SVM
-            c_range = [1.0]
+            c_range = [100.0]
 
             print("Starting validation curve")
             print(time.time())
@@ -96,7 +98,7 @@ class RegressionLearner(DataLoader):
 
                 train_scores, test_scores = validation_curve(self.estimator, filtered_features,
                                                              self.labels, param_name=self.model+"__C", param_range=c_range,
-                                                             cv=3, scoring="accuracy", n_jobs=-1)
+                                                             cv=5, scoring="accuracy", n_jobs=-1)
                 print("train_scores shape: {}".format(train_scores))
                 train_scores_mean = np.mean(train_scores, axis=1)
                 train_scores_std = np.std(train_scores, axis=1)
@@ -110,11 +112,7 @@ class RegressionLearner(DataLoader):
 
             #     lw = 2
             #     # plt.semilogx(c_range, train_scores_mean, label="Training", lw=lw)
-            #     # plt.fill_between(c_range, train_scores_mean - train_scores_std,
-            #     #                  train_scores_mean + train_scores_std, alpha=0.2, lw=lw)
             #     plt.semilogx(c_range, test_scores_mean, label=key, lw=lw)
-            #     # plt.fill_between(c_range, test_scores_mean - test_scores_std,
-            #     #                  test_scores_mean + test_scores_std, alpha=0.2, lw=lw)
             #
             # plt.title("Validation Curves")
             # plt.xlabel("C")
