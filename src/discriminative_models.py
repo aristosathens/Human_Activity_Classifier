@@ -45,15 +45,15 @@ class DiscriminativeLearner(DataLoader):
                          epochs, architecture, activation, optimizer, metric, loss)
 
         self.use_lib = use_lib
-        self.model = model
+        self.model_name = model
         if not os.path.exists(self.output_folder):
             os.makedirs(self.output_folder)
         if not os.path.exists(self.model_folder):
             os.makedirs(self.model_folder)
 
-        # if self.use_lib and self.model == 'svm':
-        #     self.raw_data = self.raw_data[:17500, :]  # reduce data size for svm
-        #     self.labels = self.labels[:17500]
+        if self.use_lib and self.model_name == 'svm' and self.raw_data.shape[0] > 17500:
+            self.raw_data = self.raw_data[:17500, :]  # reduce data size for svm
+            self.labels = self.labels[:17500]
 
         # Scale all features to make iterative algorithm more robust
         if not self.use_lib:
@@ -63,9 +63,9 @@ class DiscriminativeLearner(DataLoader):
             my_scaler.transform(self.test_data)
 
         # Dict for selecting specific IMU's with heart rate sensor
-        self.feature_indices = {'hand_ankle_chest_HR': [0, 1, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
-                                2, 3, 4, 5, 9, 10, 11, 12, 13, 14,
-                                19, 20, 21, 22, 26, 27, 28, 29, 30, 31]}
+        # self.feature_indices = {'hand_ankle_chest_HR': [0, 1, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
+        #                         2, 3, 4, 5, 9, 10, 11, 12, 13, 14,
+        #                         19, 20, 21, 22, 26, 27, 28, 29, 30, 31]}
 
         # Add intercept term (add column of 1's to x matrix) if using custom log reg function
         # scilearn already has built-in functionality
@@ -78,14 +78,14 @@ class DiscriminativeLearner(DataLoader):
         self.m, self.n = np.shape(self.train_data)
 
         if self.use_lib:
-            if self.model == 'svm':
+            if self.model_name == 'svm':
                 self.estimator = Pipeline([('scl', StandardScaler()),
-                                           (self.model, svm.SVC(kernel='rbf', gamma='auto', shrinking=True))])
+                                           (self.model_name, svm.SVC(kernel='rbf', gamma='auto', shrinking=True))])
             else:
                 self.estimator = Pipeline([('scl', StandardScaler()),
-                                           (self.model, linear_model.LogisticRegression(solver='sag',
-                                                                                        multi_class='multinomial',
-                                                                                        max_iter=5000))])
+                                           (self.model_name, linear_model.LogisticRegression(solver='sag',
+                                                                                             multi_class='multinomial',
+                                                                                             max_iter=5000))])
             self.theta = None
         else:
             self.theta = np.zeros(self.n)
@@ -96,28 +96,36 @@ class DiscriminativeLearner(DataLoader):
         '''
         if self.use_lib:
             print("Training model with scikitlearn {}...")  # .format(self.scilearn_model.__class__.__name__))
-            # c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100, 1000, 10000]  # for log reg
+            c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100, 1000, 10000]  # for log reg
             # c_range = [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]  # for SVM
-            c_range = [100.0]
+            # c_range = [100.0]
 
             print(time.time())
+            print("{} with c_range: {}".format(self.model_name, c_range))
             for key in self.feature_indices.keys():
-                filtered_features = self.raw_data[:, self.feature_indices[key]]
-
-                train_scores, test_scores = validation_curve(self.estimator, filtered_features,
-                                                             self.labels, param_name=self.model+"__C",
-                                                             param_range=c_range, cv=5, scoring="accuracy", n_jobs=-1)
-
-                print("train_scores shape: {}".format(train_scores))
-                train_scores_mean = np.mean(train_scores, axis=1)
-                train_scores_std = np.std(train_scores, axis=1)
-                test_scores_mean = np.mean(test_scores, axis=1)
-                test_scores_std = np.std(test_scores, axis=1)
-
-                print(time.time())
                 print("For key: {}".format(key))
-                print("Train scores mean: {} with std: {}".format(train_scores_mean, train_scores_std))
-                print("Test scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
+                tmp_matrix = self.raw_data[:, self.feature_indices[key]]
+                for i, val in enumerate(tmp_matrix):
+                    if i >= 2:
+                        break
+                    print("label: {}".format(self.labels[i]))
+                    print("features: {}".format(val))
+
+                # filtered_features = self.raw_data[:, self.feature_indices[key]]
+                #
+                # train_scores, test_scores = validation_curve(self.estimator, filtered_features,
+                #                                              self.labels, param_name=self.model_name+"__C",
+                #                                              param_range=c_range, cv=5, scoring="accuracy", n_jobs=-1)
+                #
+                # train_scores_mean = np.mean(train_scores, axis=1)
+                # train_scores_std = np.std(train_scores, axis=1)
+                # test_scores_mean = np.mean(test_scores, axis=1)
+                # test_scores_std = np.std(test_scores, axis=1)
+                #
+                # print(time.time())
+                # print("For key: {}".format(key))
+                # print("Train scores mean: {} with std: {}".format(train_scores_mean, train_scores_std))
+                # print("Test scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
 
             #     lw = 2
             #     # plt.semilogx(c_range, train_scores_mean, label="Training", lw=lw)
@@ -145,10 +153,10 @@ class DiscriminativeLearner(DataLoader):
         if self.use_lib:
             theta_pred = (self.scilearn_model.intercept_, self.scilearn_model.coef_)
             predictions = None
-            accur = self.scilearn_model.score(self.log_test_data, self.log_test_labels)
+            accur = self.scilearn_model.score(self.test_data, self.test_labels)
         else:
             theta_pred = self.theta
-            predictions = self.h(self.log_test_data)
+            predictions = self.h(self.test_data)
             accur = self.accuracy(predictions)
 
         print("Thetas: {}".format(theta_pred))
@@ -208,11 +216,11 @@ class DiscriminativeLearner(DataLoader):
         predictions[predictions < 0.5] = 0
 
         acc_sum = 0
-        for pred_i, t_label_i in zip(predictions, self.log_test_labels):
+        for pred_i, t_label_i in zip(predictions, self.test_labels):
             if pred_i == t_label_i:
                 acc_sum += 1
 
-        accuracy = acc_sum / np.alen(self.log_test_labels)
+        accuracy = acc_sum / np.alen(self.test_labels)
         return accuracy
 
     def h(self, x):
@@ -234,8 +242,8 @@ class DiscriminativeLearner(DataLoader):
 
             theta_previous = np.copy(self.theta)
             for j in range(self.n):
-                self.theta[j] += self.alpha * ((self.log_train_labels - self.h(self.log_train_data)) @
-                                 self.log_train_data[:, j])
+                self.theta[j] += self.alpha * ((self.train_labels - self.h(self.train_data)) @
+                                               self.train_data[:, j])
 
             delta = np.linalg.norm(theta_previous - self.theta)
             print(delta)
@@ -253,12 +261,12 @@ class DiscriminativeLearner(DataLoader):
 
             theta_previous = np.copy(self.theta)
             for i in range(self.m):
-                row = self.log_train_data[i, :]
-                self.theta += self.alpha * (self.log_train_labels[i] - self.h(row)) * row
+                row = self.train_data[i, :]
+                self.theta += self.alpha * (self.train_labels[i] - self.h(row)) * row
                 # for j in range(self.n):
                 #     self.theta[j] += self.alpha * (self.log_train_labels[i] - self.h(row)) * row[j]
 
-            self.accuracy(self.h(self.log_test_data))
+            self.accuracy(self.h(self.test_data))
             delta = np.linalg.norm(theta_previous - self.theta)
             print("Delta: {}".format(delta))
             iter += 1

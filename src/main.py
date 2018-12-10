@@ -59,7 +59,7 @@ def main():
     # ----------------------- Logistic Regression model ---------------------------------
     learner = discriminative_models.DiscriminativeLearner(data_folder_name, output_folder_name, models_folder_name,
                                                           percent_validation=0.3, epsilon=25.0, learning_rate=1e-2,
-                                                          use_lib=True, model='svm')  # model can be 'log_reg' or 'svm'
+                                                          use_lib=True, model='log_reg')  # model can be 'log_reg' or 'svm'
     learner.train(None)
     # learner.predict()
 
