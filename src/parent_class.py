@@ -39,8 +39,6 @@ class DataLoader():
                  optimizer=None,
                  metric=None,
                  loss=None,
-                 use_lib=False,
-                 model='log_reg'
                  ):
         '''
             Initialize DataLoader
@@ -70,8 +68,6 @@ class DataLoader():
         self.epochs = epochs
         self.alpha = learning_rate
         self.eps = epsilon
-        self.use_lib = use_lib
-        self.model = model
 
         self.architecture = architecture
         self.activation = activation
@@ -95,7 +91,7 @@ class DataLoader():
         # Remove all rows with Nan
         person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
 
-        #extract data
+        # extract data
         self.timestamp = person1_data_matrix_fixed[:, 0]
         self.activity_ID = person1_data_matrix_fixed[:, 1]
 
@@ -263,31 +259,6 @@ class DataLoader():
         self.feature_indices['ankle_HR'] = self.feature_indices['ankle'] + [1]
         self.feature_indices['hand_ankle_HR'] = self.feature_indices['hand_ankle'] + [1]
         self.feature_indices['hand_ankle_chest_HR'] = self.feature_indices['hand_ankle_chest'] + [1]
-
-        # # Indices for this dict are relative to the raw_data matrix
-        # self.index = {}
-        # self.index["heart_rate"] = slice(2 - a)
-        # self.index[BodyPart.heart_rate] = slice(2 - a)
-        #
-        # self.index["hand"] = slice(3 - a, 19 - a, 1)
-        # self.index["chest"] = slice(20 - a, 36 - a, 1)
-        # self.index["ankle"] = slice(37 - a, 53 - a, 1)
-        #
-        # self.index[BodyPart.hand] = slice(3 - a, 19 - a, 1)
-        # self.index[BodyPart.chest] = slice(20 - a, 36 - a, 1)
-        # self.index[BodyPart.ankle] = slice(37 - a, 53 - a, 1)
-        #
-        # # These indices are offset relative to the BodyPart indices
-        #
-        # self.index["temp"] = slice(0)
-        # self.index["accel"] = slice(1, 3, 1)
-        # self.index["gyro"] = slice(7, 9, 1)
-        # self.index["magnet"] = slice(10, 12, 1)
-        #
-        # self.index[SensorType.temp] = slice(0)
-        # self.index[SensorType.accel] = slice(1, 3, 1)
-        # self.index[SensorType.gyro] = slice(7, 9, 1)
-        # self.index[SensorType.magnet] = slice(10, 12, 1)
 
 
     # ------------------------------------- SubClass Methods ------------------------------------- #
