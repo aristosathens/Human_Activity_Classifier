@@ -96,7 +96,7 @@ class DiscriminativeLearner(DataLoader):
         '''
         if self.use_lib:
             print("Training model with scikitlearn {}...")  # .format(self.scilearn_model.__class__.__name__))
-            c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100, 1000, 10000]  # for log reg
+            c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]  # for log reg
             # c_range = [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]  # for SVM
             # c_range = [100.0]
 
@@ -104,28 +104,22 @@ class DiscriminativeLearner(DataLoader):
             print("{} with c_range: {}".format(self.model_name, c_range))
             for key in self.feature_indices.keys():
                 print("For key: {}".format(key))
-                tmp_matrix = self.raw_data[:, self.feature_indices[key]]
-                for i, val in enumerate(tmp_matrix):
-                    if i >= 2:
-                        break
-                    print("label: {}".format(self.labels[i]))
-                    print("features: {}".format(val))
 
-                # filtered_features = self.raw_data[:, self.feature_indices[key]]
-                #
-                # train_scores, test_scores = validation_curve(self.estimator, filtered_features,
-                #                                              self.labels, param_name=self.model_name+"__C",
-                #                                              param_range=c_range, cv=5, scoring="accuracy", n_jobs=-1)
-                #
-                # train_scores_mean = np.mean(train_scores, axis=1)
-                # train_scores_std = np.std(train_scores, axis=1)
-                # test_scores_mean = np.mean(test_scores, axis=1)
-                # test_scores_std = np.std(test_scores, axis=1)
-                #
-                # print(time.time())
-                # print("For key: {}".format(key))
-                # print("Train scores mean: {} with std: {}".format(train_scores_mean, train_scores_std))
-                # print("Test scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
+                filtered_features = self.raw_data[:, self.feature_indices[key]]
+
+                train_scores, test_scores = validation_curve(self.estimator, filtered_features,
+                                                             self.labels, param_name=self.model_name+"__C",
+                                                             param_range=c_range, cv=5, scoring="accuracy", n_jobs=-1)
+
+                train_scores_mean = np.mean(train_scores, axis=1)
+                train_scores_std = np.std(train_scores, axis=1)
+                test_scores_mean = np.mean(test_scores, axis=1)
+                test_scores_std = np.std(test_scores, axis=1)
+
+                print(time.time())
+                print("For key: {}".format(key))
+                print("Train scores mean: {} with std: {}".format(train_scores_mean, train_scores_std))
+                print("Test scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
 
             #     lw = 2
             #     # plt.semilogx(c_range, train_scores_mean, label="Training", lw=lw)

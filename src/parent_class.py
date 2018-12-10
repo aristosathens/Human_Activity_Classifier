@@ -116,7 +116,7 @@ class DataLoader():
         '''
         all_subjects_data_matrix = None
         directory = os.fsencode(data_folder)
-        data_file_path = data_folder + "cleanData.dat"
+        data_file_path = data_folder + "cleanData.csv"
 
         # check if cleanData.csv file already exists, otherwise create it
         if os.path.isfile(data_file_path):
