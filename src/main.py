@@ -63,6 +63,8 @@ def main():
                                                     use_lib=True, model='svm')  # model can be 'log_reg' or 'svm'
     learner.train()
     # learner.predict()
+
+    # -----------------------------------------------------------------------------------
     # Use plot() from our util.py package
     # util.plot([learner.hand_accel], show=True, title="Hand Accel vs Time")
     # util.plot([learner.chest_accel, learner.chest_gyro], show=True, title="Chest Accel & Chest Gyro vs Time")

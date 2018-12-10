@@ -8,7 +8,9 @@ from parent_class import *
 from sklearn import linear_model
 from sklearn import svm
 from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import binarize
 from sklearn.model_selection import validation_curve
+from sklearn.pipeline import Pipeline
 import matplotlib.pyplot as plt
 import os
 import time
@@ -32,37 +34,30 @@ class RegressionLearner(DataLoader):
             os.makedirs(self.model_folder)
 
         # if self.use_lib and self.model == 'svm':
-        #     self.raw_data = self.raw_data[:175000, :]  # reduce data size for svm
-        #     self.labels = self.raw_data[:175000, :]
+        #     self.raw_data = self.raw_data[:17500, :]  # reduce data size for svm
+        #     self.labels = self.labels[:17500]
 
 
         # Scale all features to make iterative algorithm more robust
-        scaler = StandardScaler(copy=False)
-        if self.use_lib:
-            scaler.fit(self.train_data)
-            scaler.transform(self.train_data)
-            scaler.transform(self.test_data)
-        else:
-            scaler.transform(self.raw_data)
+        if not self.use_lib:
+            my_scaler = StandardScaler(copy=False)
+            my_scaler.fit(self.train_data)
+            my_scaler.transform(self.train_data)
+            my_scaler.transform(self.test_data)
 
         # Dict for selecting specific IMU's with heart rate sensor
-        self.feature_indices = {
-                            # 'hand': [0, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14],
-                            # 'chest': [0, 19, 20, 21, 22, 26, 27, 28, 29, 30, 31],
-                            # 'ankle': [0, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48],
-                            # 'hand_ankle': [0, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
-                            #                2, 3, 4, 5, 9, 10, 11, 12, 13, 14],
-                            'hand_ankle_chest_HR': [0, 1, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,  # TODO: change back
-                                                 2, 3, 4, 5, 9, 10, 11, 12, 13, 14,
-                                                 19, 20, 21, 22, 26, 27, 28, 29, 30, 31]
-                            }
-        # self.feature_indices['hand_ankle'] = self.feature_indices['hand'] + self.feature_indices['ankle'][1:]
-        # self.feature_indices['hand_ankle_chest'] = self.feature_indices['hand_ankle'] + self.feature_indices['chest'][1:]
-        # self.feature_indices['hand_HR'] = self.feature_indices['hand'] + [1]
-        # self.feature_indices['chest_HR'] = self.feature_indices['chest'] + [1]
-        # self.feature_indices['ankle_HR'] = self.feature_indices['ankle'] + [1]
-        # self.feature_indices['hand_ankle_HR'] = self.feature_indices['hand_ankle'] + [1]
-        # self.feature_indices['hand_ankle_chest_HR'] = self.feature_indices['hand_ankle_chest'] + [1]
+        self.feature_indices = {'hand_ankle_chest_HR': [0, 1, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
+                                 2, 3, 4, 5, 9, 10, 11, 12, 13, 14,
+                                 19, 20, 21, 22, 26, 27, 28, 29, 30, 31]}
+
+        # ********FOR TESTING******************************************** # TODO: take out
+        # my_model = linear_model.LogisticRegression(solver='sag', multi_class='multinomial', max_iter=5000)
+        # my_train_data = self.train_data[:, self.feature_indices['hand_HR']]
+        # my_test_data = self.test_data[:, self.feature_indices['hand_HR']]
+        # my_model.fit(my_train_data, self.train_labels)
+        # print("Log reg score train: {}".format(my_model.score(my_train_data, self.train_labels)))
+        # print("Log reg score test: {}".format(my_model.score(my_test_data, self.test_labels)))
+        # **************************************************************
 
         # Add intercept term (add column of 1's to x matrix) if using custom log reg function
         # scilearn already has built-in functionality
@@ -71,73 +66,40 @@ class RegressionLearner(DataLoader):
             self.test_data = self.add_intercept(self.test_data)
 
         # self.select_activities()
-
-        self.log_train_data = self.train_data
-        self.log_train_labels = self.train_labels
-        self.log_test_data = self.test_data
-        self.log_test_labels = self.test_labels
-
         # self.change_labels()
+        self.m, self.n = np.shape(self.train_data)
 
-        self.m, self.n = np.shape(self.log_train_data)
         if self.use_lib:
             if self.model == 'svm':
-                self.scilearn_model = svm.SVC(kernel='rbf', gamma='auto', shrinking=True)
+                self.estimator = Pipeline([('scl', StandardScaler()),
+                                           (self.model, svm.SVC(kernel='rbf', gamma='auto', shrinking=True))])
             else:
-                self.scilearn_model = linear_model.LogisticRegression(solver='sag', multi_class='multinomial',
-                                                                      max_iter=5000)
+                self.estimator = Pipeline([('scl', StandardScaler()),
+                                           (self.model, linear_model.LogisticRegression(solver='sag', multi_class='multinomial',
+                                                                                        max_iter=5000))])
             self.theta = None
         else:
             self.theta = np.zeros(self.n)
-
-    def select_activities(self):
-        """
-        Which activities to select
-        """
-        bool_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3) | \
-                    (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
-                    (self.train_labels == 7) | (self.train_labels == 24)
-        bool_idxs_test = (self.test_labels == 1) | (self.test_labels == 2) | (self.test_labels == 3) | \
-                         (self.test_labels == 4) | (self.test_labels == 5) | (self.test_labels == 6) | \
-                         (self.test_labels == 7) | (self.test_labels == 24)
-
-        self.log_train_data = self.train_data[bool_idxs]
-        self.log_train_labels = self.train_labels[bool_idxs]
-        self.log_test_data = self.test_data[bool_idxs_test]
-        self.log_test_labels = self.test_labels[bool_idxs_test]
-
-    def change_labels(self):
-        """
-        replace labels 1, 2, 3 with 0 and 4, 5, 6, 7, 24 with 1
-        """
-        nonactive_idxs = (self.log_train_labels == 1) | (self.log_train_labels == 2) | (self.log_train_labels == 3)
-        active_idxs = (self.log_train_labels == 4) | (self.log_train_labels == 5) | (self.log_train_labels == 6) | \
-                      (self.log_train_labels == 7) | (self.log_train_labels == 24)
-        nonactive_idxs_test = (self.log_test_labels == 1) | (self.log_test_labels == 2) | (self.log_test_labels == 3)
-        active_idxs_test = (self.log_test_labels == 4) | (self.log_test_labels == 5) | (self.log_test_labels == 6) | \
-                           (self.log_test_labels == 7) | (self.log_test_labels == 24)
-        self.log_train_labels[nonactive_idxs] = 0
-        self.log_test_labels[nonactive_idxs_test] = 0
-        self.log_train_labels[active_idxs] = 1
-        self.log_test_labels[active_idxs_test] = 1
 
     def train(self):
         '''
             Train RegressionLearner
         '''
         if self.use_lib:
-            print("Training model with scikitlearn {}...".format(self.scilearn_model.__class__.__name__))
+            print("Training model with scikitlearn {}...")  # .format(self.scilearn_model.__class__.__name__))
             # c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10, 100, 1000, 10000]  # for log reg
             # c_range = [0.1, 1.0, 10.0, 100.0, 1000.0, 10000.0]  # for SVM
-            c_range = [0.1]
+            c_range = [100.0]
 
             print("Starting validation curve")
             print(time.time())
             for key in self.feature_indices.keys():
                 filtered_features = self.raw_data[:, self.feature_indices[key]]
-                train_scores, test_scores = validation_curve(self.scilearn_model, filtered_features,
-                                                             self.labels, param_name="C", param_range=c_range,
-                                                             cv=3, scoring="accuracy", n_jobs=-1)
+
+                train_scores, test_scores = validation_curve(self.estimator, filtered_features,
+                                                             self.labels, param_name=self.model+"__C", param_range=c_range,
+                                                             cv=5, scoring="accuracy", n_jobs=-1)
+                print("train_scores shape: {}".format(train_scores))
                 train_scores_mean = np.mean(train_scores, axis=1)
                 train_scores_std = np.std(train_scores, axis=1)
                 test_scores_mean = np.mean(test_scores, axis=1)
@@ -148,20 +110,16 @@ class RegressionLearner(DataLoader):
                 print("Train scores mean: {} with std: {}".format(train_scores_mean, train_scores_std))
                 print("Test scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
 
-                lw = 2
-                # plt.semilogx(c_range, train_scores_mean, label="Training", lw=lw)
-                # plt.fill_between(c_range, train_scores_mean - train_scores_std,
-                #                  train_scores_mean + train_scores_std, alpha=0.2, lw=lw)
-                plt.semilogx(c_range, test_scores_mean, label=key, lw=lw)
-                # plt.fill_between(c_range, test_scores_mean - test_scores_std,
-                #                  test_scores_mean + test_scores_std, alpha=0.2, lw=lw)
-
-            plt.title("Validation Curves")
-            plt.xlabel("C")
-            plt.ylabel("Accuracy")
-            plt.ylim(0.2, 1.0)
-            plt.legend(loc="best")
-            plt.savefig("./../output/mix_svm2.png")
+            #     lw = 2
+            #     # plt.semilogx(c_range, train_scores_mean, label="Training", lw=lw)
+            #     plt.semilogx(c_range, test_scores_mean, label=key, lw=lw)
+            #
+            # plt.title("Validation Curves")
+            # plt.xlabel("C")
+            # plt.ylabel("Accuracy")
+            # plt.ylim(0.2, 1.0)
+            # plt.legend(loc="best")
+            # plt.savefig("./../output/mix_svm2.png")
 
         else:
             self.stochastic_train()
@@ -188,6 +146,37 @@ class RegressionLearner(DataLoader):
         print("Model accuracy: {}".format(accur))
 
         return predictions
+
+    def select_activities(self):
+        """
+        Which activities to select
+        """
+        bool_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3) | \
+                    (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
+                    (self.train_labels == 7) | (self.train_labels == 24)
+        bool_idxs_test = (self.test_labels == 1) | (self.test_labels == 2) | (self.test_labels == 3) | \
+                         (self.test_labels == 4) | (self.test_labels == 5) | (self.test_labels == 6) | \
+                         (self.test_labels == 7) | (self.test_labels == 24)
+
+        self.train_data = self.train_data[bool_idxs]
+        self.train_labels = self.train_labels[bool_idxs]
+        self.test_data = self.test_data[bool_idxs_test]
+        self.test_labels = self.test_labels[bool_idxs_test]
+
+    def change_labels(self):
+        """
+        replace labels 1, 2, 3 with 0 and 4, 5, 6, 7, 24 with 1
+        """
+        nonactive_idxs = (self.train_labels == 1) | (self.train_labels == 2) | (self.train_labels == 3)
+        active_idxs = (self.train_labels == 4) | (self.train_labels == 5) | (self.train_labels == 6) | \
+                      (self.train_labels == 7) | (self.train_labels == 24)
+        nonactive_idxs_test = (self.test_labels == 1) | (self.test_labels == 2) | (self.test_labels == 3)
+        active_idxs_test = (self.test_labels == 4) | (self.test_labels == 5) | (self.test_labels == 6) | \
+                           (self.test_labels == 7) | (self.test_labels == 24)
+        self.train_labels[nonactive_idxs] = 0
+        self.test_labels[nonactive_idxs_test] = 0
+        self.train_labels[active_idxs] = 1
+        self.test_labels[active_idxs_test] = 1
 
     def add_intercept(self, x):
         """Add intercept to matrix x.
