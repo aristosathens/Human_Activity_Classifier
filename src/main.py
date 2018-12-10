@@ -7,7 +7,7 @@
 import sys
 import datetime
 
-import logistic_regression
+import discriminative_models
 import neural_net
 import util
 
@@ -56,12 +56,11 @@ def main():
     # accuracy = learner.accuracy()
     # print(accuracy)
 
-
     # ----------------------- Logistic Regression model ---------------------------------
-    learner = logistic_regression.RegressionLearner(data_folder_name, output_folder_name, models_folder_name,
-                                                    percent_validation=0.3, epsilon=25.0, learning_rate=1e-2,
-                                                    use_lib=True, model='svm')  # model can be 'log_reg' or 'svm'
-    learner.train()
+    learner = discriminative_models.DiscriminativeLearner(data_folder_name, output_folder_name, models_folder_name,
+                                                          percent_validation=0.3, epsilon=25.0, learning_rate=1e-2,
+                                                          use_lib=True, model='log_reg')  # model can be 'log_reg' or 'svm'
+    learner.train(None)
     # learner.predict()
 
     # -----------------------------------------------------------------------------------

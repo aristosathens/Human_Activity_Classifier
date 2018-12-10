@@ -39,8 +39,6 @@ class DataLoader():
                  optimizer=None,
                  metric=None,
                  loss=None,
-                 use_lib=False,
-                 model='log_reg'
                  ):
         '''
             Initialize DataLoader
@@ -70,8 +68,6 @@ class DataLoader():
         self.epochs = epochs
         self.alpha = learning_rate
         self.eps = epsilon
-        self.use_lib = use_lib
-        self.model = model
 
         self.architecture = architecture
         self.activation = activation
@@ -95,7 +91,7 @@ class DataLoader():
         # Remove all rows with Nan
         person1_data_matrix_fixed = person1_data_matrix_fixed[~np.any(np.isnan(person1_data_matrix_fixed), axis=1)]
 
-        #extract data
+        # extract data
         self.timestamp = person1_data_matrix_fixed[:, 0]
         self.activity_ID = person1_data_matrix_fixed[:, 1]
 
@@ -247,47 +243,17 @@ class DataLoader():
         '''
         # Dict for selecting specific IMU's with heart rate sensor
         self.feature_indices = {
-            'hand': [0, 2, 3, 4, 5, 9, 10, 11, 12, 13, 14],
-            'chest': [0, 19, 20, 21, 22, 26, 27, 28, 29, 30, 31],
-            'ankle': [0, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48],
-            'hand_ankle': [0, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
-                           2, 3, 4, 5, 9, 10, 11, 12, 13, 14],
-            'hand_ankle_chest': [0, 36, 37, 38, 39, 43, 44, 45, 46, 47, 48,
-                                 2, 3, 4, 5, 9, 10, 11, 12, 13, 14,
-                                 19, 20, 21, 22, 26, 27, 28, 29, 30, 31]
+            'hand': [1, 2, 3, 4, 8, 9, 10, 11, 12, 13],
+            'chest': [18, 19, 20, 21, 25, 26, 27, 28, 29, 30],
+            'ankle': [35, 36, 37, 38, 42, 43, 44, 45, 46, 47],
         }
-        self.feature_indices['hand_ankle'] = self.feature_indices['hand'] + self.feature_indices['ankle'][1:]
-        self.feature_indices['hand_ankle_chest'] = self.feature_indices['hand_ankle'] + self.feature_indices['chest'][1:]
-        self.feature_indices['hand_HR'] = self.feature_indices['hand'] + [1]
-        self.feature_indices['chest_HR'] = self.feature_indices['chest'] + [1]
-        self.feature_indices['ankle_HR'] = self.feature_indices['ankle'] + [1]
-        self.feature_indices['hand_ankle_HR'] = self.feature_indices['hand_ankle'] + [1]
-        self.feature_indices['hand_ankle_chest_HR'] = self.feature_indices['hand_ankle_chest'] + [1]
-
-        # # Indices for this dict are relative to the raw_data matrix
-        # self.index = {}
-        # self.index["heart_rate"] = slice(2 - a)
-        # self.index[BodyPart.heart_rate] = slice(2 - a)
-        #
-        # self.index["hand"] = slice(3 - a, 19 - a, 1)
-        # self.index["chest"] = slice(20 - a, 36 - a, 1)
-        # self.index["ankle"] = slice(37 - a, 53 - a, 1)
-        #
-        # self.index[BodyPart.hand] = slice(3 - a, 19 - a, 1)
-        # self.index[BodyPart.chest] = slice(20 - a, 36 - a, 1)
-        # self.index[BodyPart.ankle] = slice(37 - a, 53 - a, 1)
-        #
-        # # These indices are offset relative to the BodyPart indices
-        #
-        # self.index["temp"] = slice(0)
-        # self.index["accel"] = slice(1, 3, 1)
-        # self.index["gyro"] = slice(7, 9, 1)
-        # self.index["magnet"] = slice(10, 12, 1)
-        #
-        # self.index[SensorType.temp] = slice(0)
-        # self.index[SensorType.accel] = slice(1, 3, 1)
-        # self.index[SensorType.gyro] = slice(7, 9, 1)
-        # self.index[SensorType.magnet] = slice(10, 12, 1)
+        self.feature_indices['hand_ankle'] = self.feature_indices['hand'] + self.feature_indices['ankle']
+        self.feature_indices['hand_ankle_chest'] = self.feature_indices['hand_ankle'] + self.feature_indices['chest']
+        self.feature_indices['hand_HR'] = self.feature_indices['hand'] + [0]
+        self.feature_indices['chest_HR'] = self.feature_indices['chest'] + [0]
+        self.feature_indices['ankle_HR'] = self.feature_indices['ankle'] + [0]
+        self.feature_indices['hand_ankle_HR'] = self.feature_indices['hand_ankle'] + [0]
+        self.feature_indices['hand_ankle_chest_HR'] = self.feature_indices['hand_ankle_chest'] + [0]
 
 
     # ------------------------------------- SubClass Methods ------------------------------------- #
