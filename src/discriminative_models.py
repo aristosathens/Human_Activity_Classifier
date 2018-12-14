@@ -68,8 +68,6 @@ class DiscriminativeLearner(DataLoader):
             self.train_data = self.add_intercept(self.train_data)
             self.test_data = self.add_intercept(self.test_data)
 
-        # self.select_activities()
-        # self.change_labels()
         self.m, self.n = np.shape(self.train_data)
 
         if self.use_lib:
@@ -88,7 +86,6 @@ class DiscriminativeLearner(DataLoader):
     def train(self, batch_size):
         print(time.time())
         a = 100000
-        key = 'hand_HR'
         self.raw_data = self.raw_data[:, self.feature_indices['hand_HR']]
         self.train_data = self.raw_data[:a, :]  # reduce data size for svm
         self.train_labels = self.labels[:a]
@@ -118,16 +115,14 @@ class DiscriminativeLearner(DataLoader):
         if self.use_lib:
             print("Training model with scikitlearn {}...")  # .format(self.scilearn_model.__class__.__name__))
 
-            # c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]  # for log reg
-            c_range = [.01, 0.1, 1.0, 10.0, 100.0, 1000.0]  # for SVM
+            if self.model_name == 'svm':
+                c_range = [.01, 0.1, 1.0, 10.0, 100.0, 1000.0]  # for SVM
+            else:
+                c_range = [0.00001, 0.0001, 0.001, 0.01, 0.1, 1.0, 10]  # for log reg
 
-            # c_range = [100.0]
-
-            print(time.time())
             print("Number of training points {}".format(self.train_data.shape[0]))
             print("{} with c_range: {}".format(self.model_name, c_range))
-            keys = ['chest_HR', 'ankle_HR']
-            for key in keys:
+            for key in self.feature_indices.keys():
                 print("For key: {}".format(key))
 
                 filtered_features_data = self.train_data[:, self.feature_indices[key]]
@@ -143,22 +138,8 @@ class DiscriminativeLearner(DataLoader):
 
                 print(time.time())
                 print("For key: {}".format(key))
-
-                filtered_features = self.raw_data[:, self.feature_indices[key]]
-
-                train_scores, test_scores = validation_curve(self.estimator, filtered_features,
-                                                             self.labels, param_name=self.model_name+"__C",
-                                                             param_range=c_range, cv=5, scoring="accuracy", n_jobs=-1)
-
-                train_scores_mean = np.mean(train_scores, axis=1)
-                train_scores_std = np.std(train_scores, axis=1)
-                test_scores_mean = np.mean(test_scores, axis=1)
-                test_scores_std = np.std(test_scores, axis=1)
-
-                print(time.time())
-                print("For key: {}".format(key))
                 print("Train scores mean: {} with std: {}".format(train_scores_mean, train_scores_std))
-                print("Test scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
+                print("Validation scores mean: {} with std: {}".format(test_scores_mean, test_scores_std))
 
         else:
             self.stochastic_train()
@@ -169,16 +150,14 @@ class DiscriminativeLearner(DataLoader):
             Return predicted class for input_data
         '''
         # return util.sigmoid(self.theta.T.dot(input_data))
-        my_accur = None
         print("Test data len: {} {}".format(float(self.test_labels.shape[0]) / self.raw_data.shape[0], self.test_labels.shape[0]))
         if self.use_lib:
             self.test_data = self.test_data[:, self.feature_indices['hand_HR']]
             init_time = time.time()
             scilearn_model = load(self.model_folder + 'svm_c10_rbf')
-            # predictions = scilearn_model.predict(self.test_data)
+            predictions = scilearn_model.predict(self.test_data)
             accur = scilearn_model.score(self.test_data, self.test_labels)
             print("Predictions made in {} secs".format(time.time() - init_time))
-            predictions = None
         else:
             predictions = self.h(self.test_data)
             accur = self.accuracy(predictions)
@@ -235,8 +214,9 @@ class DiscriminativeLearner(DataLoader):
         return new_x
 
     def accuracy(self, predictions):
-        # predictions[predictions >= 0.5] = 1
-        # predictions[predictions < 0.5] = 0
+        if not self.use_lib:
+            predictions[predictions >= 0.5] = 1
+            predictions[predictions < 0.5] = 0
 
         acc_sum = 0
         for pred_i, t_label_i in zip(predictions, self.test_labels):

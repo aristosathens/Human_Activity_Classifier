@@ -3,6 +3,8 @@
 See the virtual_env_ReadMe for setting up a virtual environment. Important for avoiding
 problems with tensorflow versioning.
 
+Raw data can be downloaded from https://archive.ics.uci.edu/ml/datasets/PAMAP2+Physical+Activity+Monitoring
+
 # ----------------------------------------- Main ------------------------------------------ #
 
 main.py is used for creating a learner object, initializing it, and then training it and/or
@@ -44,7 +46,7 @@ util.py contains miscellaneous ml and plotting functions.
 
 ./src/ contains all of the source code.
 ./data/ contains the raw data. Is gitignored.
-./models/ contains any models we have saved for later use. Is gitignored.
-./output/ contains any plots, images, or anything else to save. Is gitignored.
+./models/ contains any models we have saved for later use.
+./output/ contains any plots, images, or anything else to save.
 ./CS229Project/ contains the virtualenv. Always run project_env.bat before beginning work
 	to ensure that we are all working in the same environment. See virtual_env_ReadMe.

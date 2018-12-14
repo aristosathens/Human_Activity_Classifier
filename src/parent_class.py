@@ -8,15 +8,11 @@ import os
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-import util
-from enum_types import *
 
 
 # ------------------------------------- Class ------------------------------------- #
 
-class DataLoader():
+class DataLoader:
     '''
         Use to load data and store it as an object.
         m - number of data points
@@ -80,7 +76,6 @@ class DataLoader():
 
         print("Finished Initializing DataLoader object.")
 
-
     def init_data(self, file_name, percent_validation=0.15):
         '''
             Read data from file_name, store in DataLoader
@@ -108,7 +103,6 @@ class DataLoader():
 
         import collections
         print("Label frequency: ", collections.Counter(self.labels))
-
 
     def convert_data(self, data_folder):
         '''
@@ -147,7 +141,6 @@ class DataLoader():
             np.savetxt(data_file_path, all_subjects_data_matrix, fmt='%.5f', delimiter=" ")
 
         return all_subjects_data_matrix
-
 
     def read_data(self, data_file_name):
         """
@@ -198,7 +191,6 @@ class DataLoader():
 
         return person1_data_matrix_fixed
 
-
     def split_data(self, data, percent_validation):
         '''
             Splits data into training and validation sets.
@@ -213,7 +205,6 @@ class DataLoader():
         self.train_data = self.raw_data[num_validation:, :]
         self.train_labels = self.labels[num_validation:]
 
-
     def clean_data(self):
         '''
             Does data preprocessing.
@@ -226,7 +217,6 @@ class DataLoader():
 
         # Scale the data
         self.raw_data /= np.std(self.raw_data, axis=0)
-
 
     def assign_data_indices(self, a):
         '''
@@ -254,7 +244,6 @@ class DataLoader():
         self.feature_indices['ankle_HR'] = self.feature_indices['ankle'] + [0]
         self.feature_indices['hand_ankle_HR'] = self.feature_indices['hand_ankle'] + [0]
         self.feature_indices['hand_ankle_chest_HR'] = self.feature_indices['hand_ankle_chest'] + [0]
-
 
     # ------------------------------------- SubClass Methods ------------------------------------- #
 
