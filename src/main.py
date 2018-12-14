@@ -59,9 +59,10 @@ def main():
     # ----------------------- Logistic Regression model ---------------------------------
     learner = discriminative_models.DiscriminativeLearner(data_folder_name, output_folder_name, models_folder_name,
                                                           percent_validation=0.3, epsilon=25.0, learning_rate=1e-2,
-                                                          use_lib=True, model='log_reg')  # model can be 'log_reg' or 'svm'
-    learner.train(None)
-    # learner.predict()
+                                                          use_lib=True, model='svm')  # model can be 'log_reg' or 'svm'
+    # learner.tune_hyperparamter()
+    # learner.train(None)
+    learner.predict(None)
 
     # -----------------------------------------------------------------------------------
     # Use plot() from our util.py package
@@ -71,8 +72,4 @@ def main():
 
 
 if __name__ == "__main__":
-
-    if not hasattr(sys, 'real_prefix'):
-        print("\n --- WARNING: Not running in virtual environment --- \n")
-
     main()
